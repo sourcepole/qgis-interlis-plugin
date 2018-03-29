@@ -76,9 +76,9 @@ changelog=
 # tags are comma separated with spaces allowed
 tags=Interlis
 
-homepage=https://github.com/sourcepole/ogrtools
-tracker=https://github.com/sourcepole/ogrtools/issues
-repository=https://github.com/sourcepole/ogrtools
+homepage=https://github.com/sourcepole/qgis-interlis-plugin
+tracker=https://github.com/sourcepole/qgis-interlis-plugin/issues
+repository=https://github.com/sourcepole/qgis-interlis-plugin
 icon=icon.png
 
 experimental=False

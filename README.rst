@@ -1,8 +1,11 @@
-ogrtools
-========
+Interlis QGIS plugin
+====================
 
-Introduction
-------------
+QGIS Plugin for importing and exporting Interlis data.
+
+
+ogrtools
+--------
 
 ogrtools is a collection of libraries and tools built with the Python
 API of `OGR <http://www.gdal.org/ogr/>`__.
@@ -30,102 +33,6 @@ driver <http://www.gdal.org/ogr/drv_ili.html>`__.
 -  Extracting enums from IlisMeta model
 -  Loading and converting of Interlis models from model repositories
 
-ogrtransform library
---------------------
-
-OGR has many options to transform data when converting from one format
-into an other. The ogrtransform library uses a configuration in JSON
-format to transform data.
-
-Example:
-
-::
-
-    {
-      "//": "OGR transformation configuration", 
-      "src_format": "Interlis 2", 
-      "dst_format": "PostgreSQL",
-      "dst_dsco": {}, 
-      "dst_lco": {
-        "SCHEMA": "public"
-      }, 
-      "layers": {
-        "roadsexdm2ben_roads_streetnameposition": {
-          "fields": {
-            "tid": {
-              "src": "TID", 
-              "type": "String"
-            }, 
-            "street": {
-              "src": "Street", 
-              "type": "String"
-            }, 
-            "namori": {
-              "src": "NamOri", 
-              "type": "Real"
-            }
-          }, 
-          "geometry_type": "Point", 
-          "src_layer": "RoadsExdm2ben.Roads.StreetNamePosition", 
-          "geom_fields": {
-            "nampos": {
-              "src": "NamPos", 
-              "type": "Point"
-            }
-          }
-        }, 
-        "roadsexdm2ben_roads_streetaxis": {
-          "fields": {
-            "tid": {
-              "src": "TID", 
-              "type": "String"
-            }, 
-            "street": {
-              "src": "Street", 
-              "type": "String"
-            }
-          }, 
-          "geometry_type": "MultiLineString", 
-          "src_layer": "RoadsExdm2ben.Roads.StreetAxis", 
-          "geom_fields": {
-            "geometry": {
-              "src": "Geometry", 
-              "type": "MultiLineString"
-            }
-          }
-        }
-      }, 
-      "enums": {
-        "enum0_type": {
-          "src_name": "RoadsExdm2ben.Roads.RoadSign.Type", 
-          "values": [
-            {
-              "enumtxt": "prohibition", 
-              "enum": "prohibition", 
-              "id": 0
-            }, 
-            {
-              "enumtxt": "indication", 
-              "enum": "indication", 
-              "id": 1
-            }, 
-            {
-              "enumtxt": "danger", 
-              "enum": "danger", 
-              "id": 2
-            }, 
-            {
-              "enumtxt": "velocity", 
-              "enum": "velocity", 
-              "id": 3
-            }
-          ]
-        }
-      }
-    }
-
-See `Wiki <https://github.com/sourcepole/ogrtools/wiki>`__ for more
-information.
 
 ogr command line tool
 ---------------------
@@ -288,147 +195,13 @@ Example:
       </OGRVRTLayer>
     </OGRVRTDataSource>
 
-ogr genconfig
-~~~~~~~~~~~~~
-
-Generate transormation specification from data source
-
-::
-
-    usage: ogr genconfig [-h] [--format FORMAT] [--model MODEL]
-                       source [layers [layers ...]]
-
-Example:
-
-::
-
-    ogr genconfig --format=PostgreSQL tests/data/osm/railway.shp
-
-::
-
-    {
-      "comment": "// OGR transformation specification",
-      "layers": {
-        "railway": {
-          "fields": {
-            "keyvalue": {
-              "src": "keyvalue", 
-              "type": "String", 
-              "width": 80
-            }, 
-            "lastchange": {
-              "src": "lastchange", 
-              "type": "Date", 
-              "width": 10
-            }, 
-            "type": {
-              "src": "type", 
-              "type": "String", 
-              "width": 255
-            }, 
-            "name": {
-              "src": "name", 
-              "type": "String", 
-              "width": 255
-            }, 
-            "osm_id": {
-              "src": "osm_id", 
-              "type": "Real", 
-              "width": 11
-            }
-          }, 
-          "geometry_type": "LineString", 
-          "src_layer": "railway"
-        }
-      }
-    }
-
-ogr write-enums
-~~~~~~~~~~~~~~~
-
-Write tables with enumeration values
-
-::
-
-    usage: ogr write-enums [-h] [--debug] [--format FORMAT] [--config CONFIG]
-                           [dest]
-
-    positional arguments:
-      dest             output datasource
-
-    optional arguments:
-      -h, --help       show this help message and exit
-      --debug          Display debugging information
-      --format FORMAT  Destination format
-      --config CONFIG  OGR configuration
-
-Example:
-
-::
-
-    ogr write-enums --config=roads.cfg "PG:dbname=ogrili"
-
-ogr transform
-~~~~~~~~~~~~~
-
-Transform data source based on transformation configuration
-
-::
-
-    usage: ogr transform [-h] [--debug] [--reverse] [--format FORMAT]
-                         [--config CONFIG]
-                         [dest] source [layers [layers ...]]
-
-    positional arguments:
-      dest             output datasource
-      source           input datasource
-      layers           layer names
-
-    optional arguments:
-      -h, --help       show this help message and exit
-      --debug          Display debugging information
-      --reverse        Reverse transformation
-      --format FORMAT  Destination format
-      --config CONFIG  OGR configuration
-
-Example:
-
-::
-
-    ogr transform --config=roads.cfg "PG:dbname=ogrili" RoadsExdm2ien.xml
-
-From Interlis to GML:
-
-::
-
-    ogr transform --format GML --config tests/data/ili/RoadsExdm2ien.cfg tests/data/ili/RoadsExdm2ien.gml tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd
-
-Back to Interlis:
-
-::
-
-    ogr transform --reverse --config tests/data/ili/RoadsExdm2ien.cfg /tmp/roads23_from_gml.xtf,tests/data/ili/RoadsExdm2ien.imd tests/data/ili/RoadsExdm2ien.gml
-
-ogrprocessing QGIS plugin
--------------------------
-
-Provides OGR functionality as QGIS SEXTANTE plugin. It was published for
-QGIS 1.8 and is now included in the core processing algorithms of QGIS
-2.0.
-
-Interlis QGIS plugin
---------------------
-
-GUI for importing and exporting Interlis data with OGR/ogrtools.
-Includes Python libraries for easy installation. Currently tested with
-QGIS 2.0.
 
 Development
 -----------
 
 ::
 
-    git clone https://github.com/sourcepole/ogrtools.git
+    git clone https://github.com/sourcepole/qgis-interlis-plugin.git
 
 Running tests:
 
@@ -449,6 +222,6 @@ For running ogr commands from source tree:
 License
 -------
 
-ogrtools is Copyright © 2012-2015 Sourcepole AG. It is free software,
+ogrtools is Copyright © 2012-2018 Sourcepole AG. It is free software,
 and may be redistributed under the terms specified in the LICENSE.txt
 file.
