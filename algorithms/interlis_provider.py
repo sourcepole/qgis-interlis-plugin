@@ -21,37 +21,38 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtGui import QIcon
-from processing.core.AlgorithmProvider import AlgorithmProvider
-from processing.core.ProcessingConfig import Setting, ProcessingConfig
-from interlis_utils import IliUtils
-from ili2pg_algorithms import Ili2PgSchemaAlgorithm, Ili2PgImportAlgorithm, Ili2PgExportAlgorithm
-from ili2gpkg_algorithms import Ili2GpkgSchemaAlgorithm, Ili2GpkgImportAlgorithm, Ili2GpkgExportAlgorithm
-from ili2c_algorithms import Ili2ImdAlgorithm
+from qgis.PyQt.QtGui import QIcon
+from qgis.core import QgsProcessingProvider
+from processing.core.ProcessingConfig import ProcessingConfig, Setting
 import os
+from .interlis_utils import IliUtils
+from .ili2pg_algorithms import (Ili2PgSchemaAlgorithm, Ili2PgImportAlgorithm,
+                                Ili2PgExportAlgorithm)
+from .ili2gpkg_algorithms import (Ili2GpkgSchemaAlgorithm,
+                                  Ili2GpkgImportAlgorithm,
+                                  Ili2GpkgExportAlgorithm)
+from .ili2c_algorithms import Ili2ImdAlgorithm
 
 
-class InterlisProvider(AlgorithmProvider):
+class InterlisProvider(QgsProcessingProvider):
 
     _icon = QIcon(':/plugins/interlis/icon.png')
 
     def __init__(self):
-        AlgorithmProvider.__init__(self)
+        QgsProcessingProvider.__init__(self)
 
         self.activate = True
 
         # Load algorithms
         self.alglist = [
-            Ili2PgSchemaAlgorithm(), Ili2PgImportAlgorithm(), Ili2PgExportAlgorithm(),
-            Ili2GpkgSchemaAlgorithm(), Ili2GpkgImportAlgorithm(), Ili2GpkgExportAlgorithm(),
+            Ili2PgSchemaAlgorithm(), Ili2PgImportAlgorithm(),
+            Ili2PgExportAlgorithm(), Ili2GpkgSchemaAlgorithm(),
+            Ili2GpkgImportAlgorithm(), Ili2GpkgExportAlgorithm(),
             Ili2ImdAlgorithm()
-        ]
-        for alg in self.alglist:
-            alg.provider = self
-            alg._icon = self._icon
+            ]
+        self.initializeSettings()
 
     def initializeSettings(self):
-        AlgorithmProvider.initializeSettings(self)
         jarpath = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..', 'jars'))
         ProcessingConfig.addSetting(Setting(
@@ -67,12 +68,15 @@ class InterlisProvider(AlgorithmProvider):
                     os.path.join(jarpath, "ili2gpkg.jar")))
 
     def unload(self):
-        AlgorithmProvider.unload(self)
-        ProcessingConfig.removeSetting(InterlisProvider.JAVA_EXEC)
-        ProcessingConfig.removeSetting(InterlisProvider.ILI2PG_JAR)
-        ProcessingConfig.removeSetting(InterlisProvider.ILI2GPKG_JAR)
+        QgsProcessingProvider.unload(self)
+        ProcessingConfig.removeSetting(IliUtils.JAVA_EXEC)
+        ProcessingConfig.removeSetting(IliUtils.ILI2PG_JAR)
+        ProcessingConfig.removeSetting(IliUtils.ILI2GPKG_JAR)
 
-    def getName(self):
+    def id(self):
+        return 'Interlis'
+
+    def name(self):
         """This is the name that will appear on the toolbox group.
 
         It is also used to create the command line name of all the
@@ -85,10 +89,10 @@ class InterlisProvider(AlgorithmProvider):
         """
         return 'Interlis'
 
-    def getIcon(self):
+    def icon(self):
         return self._icon
 
-    def _loadAlgorithms(self):
+    def loadAlgorithms(self):
         """Here we fill the list of algorithms in self.algs.
 
         This method is called whenever the list of algorithms should
@@ -102,4 +106,5 @@ class InterlisProvider(AlgorithmProvider):
         even if the list does not change, since the self.algs list is
         cleared before calling this method.
         """
-        self.algs = self.alglist
+        for alg in self.alglist:
+            self.addAlgorithm(alg)

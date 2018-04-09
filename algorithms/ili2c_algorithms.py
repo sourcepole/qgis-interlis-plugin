@@ -29,33 +29,51 @@ __copyright__ = '(C) 2016 by Pirmin Kalberer'
 
 __revision__ = '$Format:%H$'
 
-from processing.core.GeoAlgorithm import GeoAlgorithm
-from processing.core.parameters import ParameterFile
-from processing.core.outputs import OutputFile
+from qgis.core import (QgsProcessingAlgorithm,
+                       QgsProcessingParameterFile,
+                       QgsProcessingParameterFileDestination,
+                       QCoreApplication
+                       )
 
-from interlis.algorithms.interlis_utils import IliUtils
+from .interlis_utils import IliUtils
 
 
-class Ili2ImdAlgorithm(GeoAlgorithm):
+class Ili2ImdAlgorithm(QgsProcessingAlgorithm):
 
     OUTPUT = "OUTPUT"
     ILI = "ILI"
     IMD = "IMD"
+    GROUP = "ili2c"
 
-    def defineCharacteristics(self):
-        self.name = "Ili Model -> IlisMeta"
-        self.group = "ili2c"
+    def name(self):
+        return 'Ili Model -> IliMeta'
 
-        self.addParameter(ParameterFile(
+    def displayName(self):
+        return self.tr(self.name())
+
+    def tr(self, string):
+        return QCoreApplication.translate('Processing', string)
+
+    def group(self):
+        return self.tr(self.groupId())
+
+    def groupId(self):
+        return self.GROUP
+
+    def createInstance(self):
+        return Ili2ImdAlgorithm()
+
+    def initAlgorithm(self, config=None):
+        self.addParameter(QgsProcessingParameterFile(
             self.ILI,
-            self.tr('Interlis model file'), optional=False, ext='ili'))
-        self.addOutput(OutputFile(
-            self.IMD,
-            description="IlisMeta XML model output file", ext='imd'))
+            self.tr('Interlis model file'), optional=False))
+        self.addParameter(QgsProcessingParameterFileDestination(
+            self.IMD, description="IlisMeta XML model output file"))
 
-    def processAlgorithm(self, progress):
+    def processAlgorithm(self, parameters, context, feedback):
         '''Here is where the processing itself takes place'''
 
-        ili = self.getParameterValue(self.ILI)
-        imd = self.getOutputValue(self.IMD)
-        IliUtils.runIli2c(["-oIMD", "--out", imd, ili], progress)
+        ili = parameters[self.ILI]
+        imd = parameters[self.IMD]
+        IliUtils.runIli2c(["-oIMD", "--out", imd, ili])
+        return {}
