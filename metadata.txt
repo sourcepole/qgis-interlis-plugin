@@ -1,6 +1,6 @@
 [general]
 name=interlis
-qgisMinimumVersion=2.14
+qgisMinimumVersion=3.0
 # 2.14 is technically not required, but the first version on Windows with OGR 2.0
 description=Interlis Import/Export
 about=Load Interlis data into QGIS layer and import/export functionality for PostGIS.
@@ -83,4 +83,3 @@ icon=icon.png
 
 experimental=False
 deprecated=False
-
