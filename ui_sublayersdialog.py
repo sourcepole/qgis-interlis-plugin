@@ -2,41 +2,36 @@
 
 # Form implementation generated from reading ui file 'ui_sublayersdialog.ui'
 #
-# Created: Wed Feb 19 15:15:57 2014
-#      by: PyQt4 UI code generator 4.9.1
+# Created by: PyQt5 UI code generator 5.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_SublayersDialog(object):
     def setupUi(self, SublayersDialog):
-        SublayersDialog.setObjectName(_fromUtf8("SublayersDialog"))
+        SublayersDialog.setObjectName("SublayersDialog")
         SublayersDialog.resize(400, 300)
-        self.gridLayout = QtGui.QGridLayout(SublayersDialog)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.mSublayersTreeWidget = QtGui.QTreeWidget(SublayersDialog)
+        self.gridLayout = QtWidgets.QGridLayout(SublayersDialog)
+        self.gridLayout.setObjectName("gridLayout")
+        self.mSublayersTreeWidget = QtWidgets.QTreeWidget(SublayersDialog)
         self.mSublayersTreeWidget.setRootIsDecorated(False)
         self.mSublayersTreeWidget.setItemsExpandable(False)
-        self.mSublayersTreeWidget.setObjectName(_fromUtf8("mSublayersTreeWidget"))
-        self.mSublayersTreeWidget.headerItem().setText(0, _fromUtf8("1"))
+        self.mSublayersTreeWidget.setObjectName("mSublayersTreeWidget")
+        self.mSublayersTreeWidget.headerItem().setText(0, "1")
         self.gridLayout.addWidget(self.mSublayersTreeWidget, 0, 0, 1, 1)
-        self.buttonBox = QtGui.QDialogButtonBox(SublayersDialog)
+        self.buttonBox = QtWidgets.QDialogButtonBox(SublayersDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
         self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
 
         self.retranslateUi(SublayersDialog)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), SublayersDialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), SublayersDialog.reject)
+        self.buttonBox.accepted.connect(SublayersDialog.accept)
+        self.buttonBox.rejected.connect(SublayersDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(SublayersDialog)
 
     def retranslateUi(self, SublayersDialog):
-        SublayersDialog.setWindowTitle(QtGui.QApplication.translate("SublayersDialog", "Interlis sublayers", None, QtGui.QApplication.UnicodeUTF8))
+        _translate = QtCore.QCoreApplication.translate
+        SublayersDialog.setWindowTitle(_translate("SublayersDialog", "Interlis sublayers"))
 

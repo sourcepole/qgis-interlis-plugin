@@ -2,7 +2,7 @@ try:
     from osgeo import ogr
 except:
     import ogr
-from ogrvrt import GeomType2Name, Esc
+from .ogrvrt import GeomType2Name, Esc
 
 
 def has_multi_geom_tables(infile):

@@ -29,13 +29,18 @@ __copyright__ = '(C) 2016 by Pirmin Kalberer'
 
 __revision__ = '$Format:%H$'
 
-from processing.core.GeoAlgorithm import GeoAlgorithm
-from processing.core.GeoAlgorithmExecutionException import GeoAlgorithmExecutionException
-from processing.core.parameters import ParameterVector, ParameterFile, ParameterString, ParameterBoolean, ParameterSelection
-from processing.core.outputs import OutputFile
+from qgis.core import (QgsProcessingAlgorithm,
+                       QgsProcessingParameterCrs,
+                       QgsProcessingParameterString,
+                       QgsProcessingParameterFile,
+                       QgsProcessingParameterFileDestination,
+                       QgsProcessingParameterEnum,
+                       QgsProcessingParameterBoolean,
+                       QCoreApplication
+                       )
 from processing.core.ProcessingConfig import ProcessingConfig
 
-from interlis.algorithms.interlis_utils import IliUtils
+from .interlis_utils import IliUtils
 
 
 # USAGE
@@ -52,7 +57,8 @@ from interlis.algorithms.interlis_utils import IliUtils
 # --dbfile gpkgfile       The filename of the database.
 # --validConfig file     Config file for validation.
 # --disableValidation    Disable validation of data.
-# --deleteData           on schema/data import, delete existing data from existing tables.
+# --deleteData           on schema/data import, delete existing data
+#                        from existing tables.
 # --defaultSrsAuth  auth Default SRS authority EPSG
 # --defaultSrsCode  code Default SRS code 21781
 # --modeldir  path       Path(s) of directories containing ili-files.
@@ -61,7 +67,8 @@ from interlis.algorithms.interlis_utils import IliUtils
 # --baskets BID          Basket-Id(s) of ili-baskets to export.
 # --topics topicname     Name(s) of ili-topics to export.
 # --createscript filename  Generate a sql script that creates the db schema.
-# --dropscript filename  Generate a sql script that drops the generated db schema.
+# --dropscript filename  Generate a sql script that drops the generated db
+#                        schema.
 # --noSmartMapping       disable all smart mappings
 # --smart1Inheritance     enable smart1 mapping of class/structure inheritance
 # --smart2Inheritance     enable smart2 mapping of class/structure inheritance
@@ -69,8 +76,10 @@ from interlis.algorithms.interlis_utils import IliUtils
 # --coalesceMultiSurface enable smart mapping of CHBase:MultiSurface
 # --expandMultilingual   enable smart mapping of CHBase:MultilingualText
 # --createGeomIdx        create a spatial index on geometry columns.
-# --createEnumColAsItfCode create enum type column with value according to ITF (instead of XTF).
-# --createEnumTxtCol     create an additional column with the text of the enumeration value.
+# --createEnumColAsItfCode create enum type column with value according to
+#                        ITF (instead of XTF).
+# --createEnumTxtCol     create an additional column with the text of the
+#                        enumeration value.
 # --createEnumTabs       generate tables with enum definitions.
 # --createSingleEnumTab  generate all enum definitions in a single table.
 # --createStdCols        generate T_User, T_CreateDate, T_LastChange columns.
@@ -78,8 +87,10 @@ from interlis.algorithms.interlis_utils import IliUtils
 # --idSeqMin minValue    sets the minimum value of the id sequence generator.
 # --idSeqMax maxValue    sets the maximum value of the id sequence generator.
 # --createTypeDiscriminator  generate always a type discriminaor colum.
-# --structWithGenericRef  generate one generic reference to parent in struct tables.
-# --disableNameOptimization disable use of unqualified class name as table name.
+# --structWithGenericRef  generate one generic reference to parent in struct
+#                        tables.
+# --disableNameOptimization disable use of unqualified class name as table
+#                        name.
 # --nameByTopic          use topic+class name as table name.
 # --maxNameLength length max length of sql names (60)
 # --sqlEnableNull        create no NOT NULL constraints in db schema.
@@ -92,14 +103,15 @@ from interlis.algorithms.interlis_utils import IliUtils
 # --createFk             generate foreign key constraints.
 # --createFkIdx          create an index on foreign key columns.
 # --createUnique         create UNIQUE db constraints.
-# --dbschema  schema     The name of the schema in the database. Defaults to not set.
+# --dbschema  schema     The name of the schema in the database. Defaults to
+#                        not set.
 # --log filename         log message to given file.
 # --gui                  start GUI.
 # --trace                enable trace messages.
 # --help                 Display this help text.
 
 
-class Ili2GpkgSchemaAlgorithm(GeoAlgorithm):
+class Ili2GpkgSchemaAlgorithm(QgsProcessingAlgorithm):
     OUTPUT = "OUTPUT"
     ILIDIR = "ILIDIR"
     ILIMODELS = "ILIMODELS"
@@ -113,108 +125,127 @@ class Ili2GpkgSchemaAlgorithm(GeoAlgorithm):
         'smart1Inheritance',
         'smart2Inheritance',
         'noSmartMapping']
+    GROUP = 'ili2gpkg'
 
-    def defineCharacteristics(self):
-        self.name = "Create Schema from Model (GPKG)"
-        self.group = "ili2gpkg"
+    def name(self):
+        return "Create Schema from Model (GPKG)"
 
-        self.addParameter(ParameterString(
-            self.ILIMODELS,
-            self.tr('Interlis models')))
-        self.addParameter(ParameterString(
-            self.ILIDIR,
-            self.tr('Interlis model search path'),
-            default='http://models.geo.admin.ch/'))
-        self.addParameter(ParameterFile(
+    def displayName(self):
+        return self.tr(self.name())
+
+    def tr(self, string):
+        return QCoreApplication.translate('Processing', string)
+
+    def group(self):
+        return self.tr(self.groupId())
+
+    def groupId(self):
+        return self.GROUP
+
+    def createInstance(self):
+        return Ili2GpkgSchemaAlgorithm()
+
+    def initAlgorithm(self, config=None):
+        self.addParameter(QgsProcessingParameterString(
+            self.ILIMODELS, self.tr('Interlis models')))
+        self.addParameter(QgsProcessingParameterString(
+            self.ILIDIR, self.tr('Interlis model search path'),
+            defaultValue='http://models.geo.admin.ch/'))
+        self.addParameter(QgsProcessingParameterFile(
             'iliLocalPath',
-            self.tr('Local model directory'), isFolder=True))
-        self.addParameter(ParameterSelection(
-            'tableNaming',
-            self.tr('Table naming convention:'),
-            options=self.TABLE_NAMING, default=1))
-        self.addParameter(ParameterSelection(
-            'inheritanceMapping',
-            self.tr('Inheritance mapping strategy:'),
-            options=self.INHERTIANCE_MAPPINGS, default=0))
-        self.addParameter(ParameterBoolean(
-            'sqlNotNull',
-            self.tr('Create NOT NULL constraints in db schema'), default=False))
-        self.addParameter(ParameterBoolean(
-            'createBasketCol',
-            self.tr('Generate T_basket column'), default=False))
-        # self.addParameter(ParameterBoolean(
+            self.tr('Local model directory'), optional=True,
+            behavior=QgsProcessingParameterFile.Folder))
+        self.addParameter(QgsProcessingParameterEnum(
+            'tableNaming', self.tr('Table naming convention:'),
+            options=self.TABLE_NAMING, defaultValue=1))
+        self.addParameter(QgsProcessingParameterEnum(
+            'inheritanceMapping', self.tr('Inheritance mapping strategy:'),
+            options=self.INHERTIANCE_MAPPINGS, defaultValue=0))
+        self.addParameter(QgsProcessingParameterBoolean(
+            'sqlNotNull', self.tr('Create NOT NULL constraints in db schema'),
+            defaultValue=False))
+        self.addParameter(QgsProcessingParameterBoolean(
+            'createBasketCol', self.tr('Generate T_basket column'),
+            defaultValue=False))
+        # self.addParameter(QgsProcessingParameterBoolean(
         #     'createFk',
-        #     self.tr('Generate foreign key constraints'), default=True))
-        #  [SQLITE_ERROR] SQL error or missing database (near "CONSTRAINT": syntax error)
-        self.addParameter(ParameterBoolean(
-            'createFkIdx',
-            self.tr('Create an index on foreign key columns'), default=True))
-        self.addParameter(ParameterBoolean(
+        #     self.tr('Generate foreign key constraints'), defaultValue=True))
+        #  [SQLITE_ERROR] SQL error or missing database
+        #  (near "CONSTRAINT": syntax error)
+        self.addParameter(QgsProcessingParameterBoolean(
+            'createFkIdx', self.tr('Create an index on foreign key columns'),
+            defaultValue=True))
+        self.addParameter(QgsProcessingParameterBoolean(
             'createGeomIdx',
-            self.tr('Create a spatial index on geometry columns'), default=True))
-        self.addParameter(ParameterBoolean(
-            'strokeArcs',
-            self.tr('Stroke ARCS on import'), default=False))
-        self.addParameter(ParameterBoolean(
-            'createEnumTabs',
-            self.tr('Generate tables with enum definitions'), default=True))
-        self.addParameter(ParameterString(
-            'defaultSrsCode',
-            self.tr('Default SRS code (EPSG)'), default='21781'))
-        self.addParameter(ParameterFile(
+            self.tr('Create a spatial index on geometry columns'),
+            defaultValue=True))
+        self.addParameter(QgsProcessingParameterBoolean(
+            'strokeArcs', self.tr('Stroke ARCS on import'),
+            defaultValue=False))
+        self.addParameter(QgsProcessingParameterBoolean(
+            'createEnumTabs', self.tr('Generate tables with enum definitions'),
+            defaultValue=True))
+        self.addParameter(QgsProcessingParameterCrs(
+            'defaultSrsCode', self.tr('Default SRS code (EPSG)'),
+            defaultValue=21781))
+        self.addParameter(QgsProcessingParameterFile(
             self.DB,
-            self.tr('GPKG database file'), optional=False, ext='gpkg'))
+            self.tr('GPKG database file'),
+            behavior=QgsProcessingParameterFile.File, optional=False,
+            extension='gpkg'))
 
-    def processAlgorithm(self, progress):
+    def processAlgorithm(self, parameters, context, feedback):
         ili2dbargs = ['--schemaimport']
 
-        models = self.getParameterValue(self.ILIMODELS)
+        models = parameters.get(self.ILIMODELS)
         if models:
             ili2dbargs.extend(["--models", models])
 
-        modeldir = self.getParameterValue(self.ILIDIR)
-        localmodeldir = self.getParameterValue('iliLocalPath')
+        modeldir = parameters.get(self.ILIDIR)
+        localmodeldir = parameters.get('iliLocalPath')
         if localmodeldir:
             modeldir = "%s;%s" % (localmodeldir, modeldir)
         ili2dbargs.append('--modeldir "%s"' % modeldir)
 
-        naming = self.TABLE_NAMING[self.getParameterValue('tableNaming')]
+        naming = self.TABLE_NAMING[parameters.get('tableNaming')]
         if naming != 'unqualified':
             ili2dbargs.append("--%s" % naming)
 
-        mapping = self.INHERTIANCE_MAPPINGS[self.getParameterValue('inheritanceMapping')]
+        mapping = self.INHERTIANCE_MAPPINGS[
+            parameters.get('inheritanceMapping')]
         ili2dbargs.append("--%s" % mapping)
 
-        if not self.getParameterValue('sqlNotNull'):
+        if not parameters.get('sqlNotNull'):
             ili2dbargs.append('--sqlEnableNull')
 
-        if self.getParameterValue('createFk'):
+        if parameters.get('createFk'):
             ili2dbargs.append('--createFk')
 
-        if self.getParameterValue('createFkIdx'):
+        if parameters.get('createFkIdx'):
             ili2dbargs.append('--createFkIdx')
 
-        if self.getParameterValue('createGeomIdx'):
+        if parameters.get('createGeomIdx'):
             ili2dbargs.append('--createGeomIdx')
 
-        if self.getParameterValue('strokeArcs'):
+        if parameters.get('strokeArcs'):
             ili2dbargs.append('--strokeArcs')
 
-        if self.getParameterValue('createEnumTabs'):
+        if parameters.get('createEnumTabs'):
             ili2dbargs.append('--createEnumTabs')
 
-        defaultSrsCode = self.getParameterValue('defaultSrsCode')
+        defaultSrsCode = parameters.get('defaultSrsCode').split(":")[1]
         ili2dbargs.extend(["--defaultSrsCode", defaultSrsCode])
 
-        db = self.getParameterValue(self.DB)
+        db = parameters.get(self.DB)
         ili2dbargs.extend(["--dbfile", db])
 
         IliUtils.runJava(
             ProcessingConfig.getSetting(IliUtils.ILI2GPKG_JAR),
-            ili2dbargs, progress)
+            ili2dbargs)
+        return {}
 
 
-class Ili2GpkgImportAlgorithm(GeoAlgorithm):
+class Ili2GpkgImportAlgorithm(QgsProcessingAlgorithm):
     OUTPUT = "OUTPUT"
     ILIDIR = "ILIDIR"
     ILIMODELS = "ILIMODELS"
@@ -224,116 +255,144 @@ class Ili2GpkgImportAlgorithm(GeoAlgorithm):
         'import',
         'update',
         'replace']
+    GROUP = 'ili2gpkg'
 
-    def defineCharacteristics(self):
-        self.name = "Import into GPKG"
-        self.group = "ili2gpkg"
+    def name(self):
+        return "Import into GPKG"
 
-        self.addParameter(ParameterSelection(
+    def displayName(self):
+        return self.tr(self.name())
+
+    def tr(self, string):
+        return QCoreApplication.translate('Processing', string)
+
+    def group(self):
+        return self.tr(self.groupId())
+
+    def groupId(self):
+        return self.GROUP
+
+    def createInstance(self):
+        return Ili2GpkgImportAlgorithm()
+
+    def initAlgorithm(self, config=None):
+        self.addParameter(QgsProcessingParameterEnum(
             'importMode',
             self.tr('Import mode:'),
-            options=self.IMPORT_MODE, default=0))
-        self.addParameter(ParameterString(
-            'dataset',
-            self.tr('Name of dataset'), optional=True))
-        self.addParameter(ParameterBoolean(
-            'deleteData',
-            self.tr('Delete existing data from existing tables'), default=False))
-        self.addParameter(ParameterFile(
-            self.XTF,
-            self.tr('Interlis transfer input file'), optional=False))
-        self.addParameter(ParameterString(
-            self.ILIDIR,
-            self.tr('Interlis model search path'),
-            default='%ILI_FROM_DB;%XTF_DIR;http://models.geo.admin.ch/'))
-        self.addParameter(ParameterString(
-            self.ILIMODELS,
-            self.tr('Interlis models'), optional=True))
-        self.addParameter(ParameterFile(
-            self.DB,
-            self.tr('GPKG database file'), optional=False, ext='gpkg'))
+            options=self.IMPORT_MODE, defaultValue=0))
+        self.addParameter(QgsProcessingParameterString(
+            'dataset', self.tr('Name of dataset'), optional=True))
+        self.addParameter(QgsProcessingParameterBoolean(
+            'deleteData', self.tr('Delete existing data from existing tables'),
+            defaultValue=False))
+        self.addParameter(QgsProcessingParameterFile(
+            self.XTF, self.tr('Interlis transfer input file')))
+        self.addParameter(QgsProcessingParameterString(
+            self.ILIDIR, self.tr('Interlis model search path'),
+            defaultValue='%ILI_FROM_DB;%XTF_DIR;http://models.geo.admin.ch/'))
+        self.addParameter(QgsProcessingParameterString(
+            self.ILIMODELS, self.tr('Interlis models'), optional=True))
+        self.addParameter(QgsProcessingParameterFile(
+            self.DB, self.tr('GPKG database file'),
+            behavior=QgsProcessingParameterFile.File,
+            extension='gpkg'))
 
-    def processAlgorithm(self, progress):
+    def processAlgorithm(self, parameters, context, feedback):
         ili2dbargs = []
 
-        mode = self.IMPORT_MODE[self.getParameterValue('importMode')]
+        mode = self.IMPORT_MODE[parameters.get('importMode')]
         ili2dbargs.append("--%s" % mode)
 
-        dataset = self.getParameterValue('dataset')
+        dataset = parameters.get('dataset')
         if dataset:
             ili2dbargs.extend(["--dataset", dataset])
 
-        if self.getParameterValue('deleteData'):
+        if parameters.get('deleteData'):
             ili2dbargs.append('--deleteData')
 
-        db = self.getParameterValue(self.DB)
+        db = parameters.get(self.DB)
         ili2dbargs.extend(["--dbfile", db])
 
-        modeldir = self.getParameterValue(self.ILIDIR)
+        modeldir = parameters.get(self.ILIDIR)
         ili2dbargs.append('--modeldir "%s"' % modeldir)
 
-        models = self.getParameterValue(self.ILIMODELS)
+        models = parameters.get(self.ILIMODELS)
         if models:
             ili2dbargs.extend(["--models", models])
 
-        xtf = self.getParameterValue(self.XTF)
+        xtf = parameters.get(self.XTF)
         ili2dbargs.append(xtf)
 
         IliUtils.runJava(
             ProcessingConfig.getSetting(IliUtils.ILI2GPKG_JAR),
-            ili2dbargs, progress)
+            ili2dbargs)
+        return {}
 
 
-class Ili2GpkgExportAlgorithm(GeoAlgorithm):
+class Ili2GpkgExportAlgorithm(QgsProcessingAlgorithm):
 
     OUTPUT = "OUTPUT"
     ILIDIR = "ILIDIR"
     ILIMODELS = "ILIMODELS"
     XTF = "XTF"
     DB = "DB"
+    GROUP = 'ili2gpkg'
 
-    def defineCharacteristics(self):
-        self.name = "Export from GPKG"
-        self.group = "ili2gpkg"
+    def name(self):
+        return "Export from GPKG"
 
-        self.addParameter(ParameterFile(
-            self.DB,
-            self.tr('GPKG database file'), optional=False, ext='gpkg'))
-        self.addParameter(ParameterString(
-            'dataset',
-            self.tr('Name of dataset'), optional=True))
-        self.addParameter(ParameterString(
-            self.ILIDIR,
-            self.tr('Interlis model search path'),
-            default='%ILI_FROM_DB;%XTF_DIR;http://models.geo.admin.ch/'))
-        self.addParameter(ParameterString(
-            self.ILIMODELS,
-            self.tr('Interlis models')))
-        self.addOutput(OutputFile(
-            self.XTF,
-            description="Interlis transfer output file"))
+    def displayName(self):
+        return self.tr(self.name())
+
+    def tr(self, string):
+        return QCoreApplication.translate('Processing', string)
+
+    def group(self):
+        return self.tr(self.groupId())
+
+    def groupId(self):
+        return self.GROUP
+
+    def createInstance(self):
+        return Ili2GpkgExportAlgorithm()
+
+    def initAlgorithm(self, config=None):
+        self.addParameter(QgsProcessingParameterFile(
+            self.DB, self.tr('GPKG database file'), optional=False,
+            # behavior=QgsProcessingParameterFile.File, ext='gpkg'))
+            behavior=QgsProcessingParameterFile.File))
+        self.addParameter(QgsProcessingParameterString(
+            'dataset', self.tr('Name of dataset'), optional=True))
+        self.addParameter(QgsProcessingParameterString(
+            self.ILIDIR, self.tr('Interlis model search path'),
+            defaultValue='%ILI_FROM_DB;%XTF_DIR;http://models.geo.admin.ch/'))
+        self.addParameter(QgsProcessingParameterString(
+            self.ILIMODELS, self.tr('Interlis models')))
+        self.addParameter(QgsProcessingParameterFileDestination(
+            self.XTF, description="Interlis transfer output file"))
         # ext: xtf, xml, itf
 
-    def processAlgorithm(self, progress):
+    def processAlgorithm(self, parameters, context, feedback):
         ili2dbargs = ['--export']
 
-        db = self.getParameterValue(self.DB)
+        db = parameters.get(self.DB)
         ili2dbargs.extend(["--dbfile", db])
 
-        dataset = self.getParameterValue('dataset')
+        dataset = parameters.get('dataset')
         if dataset:
             ili2dbargs.extend(["--dataset", dataset])
 
-        modeldir = self.getParameterValue(self.ILIDIR)
+        modeldir = parameters.get(self.ILIDIR)
         ili2dbargs.append('--modeldir "%s"' % modeldir)
 
-        models = self.getParameterValue(self.ILIMODELS)
+        models = parameters.get(self.ILIMODELS)
         if models:
             ili2dbargs.extend(["--models", models])
 
-        xtf = self.getOutputValue(self.XTF)
+        xtf = parameters.get(self.XTF)
         ili2dbargs.append(xtf)
 
         IliUtils.runJava(
             ProcessingConfig.getSetting(IliUtils.ILI2GPKG_JAR),
-            ili2dbargs, progress)
+            ili2dbargs)
+        return {}

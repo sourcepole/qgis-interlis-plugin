@@ -10,37 +10,38 @@ from ogrtools.ogrtransform.ogrconfig import OgrConfig
 
 def info(args):
     if not args.layers:
-        print ogrinfo(readonly=True, summaryonly=True, all_layers=True,
-                      datasource_name=args.source)
+        print(ogrinfo(readonly=True, summaryonly=True, all_layers=True,
+                      datasource_name=args.source))
     else:
-        print ogrinfo(readonly=True, summaryonly=True,
-                      datasource_name=args.source, layers=args.layers)
+        print(ogrinfo(readonly=True, summaryonly=True,
+                      datasource_name=args.source, layers=args.layers))
     return 0
 
 
 def formats(args):
-    print ogr_formats()
+    print(ogr_formats())
     return 0
 
 
 def version(args):
-    print ogr_version_info()
+    print(ogr_version_info())
     return 0
 
 
 def sql(args):
-    print ogrinfo(datasource_name=args.source, sql_statement=args.sql)
+    print(ogrinfo(datasource_name=args.source, sql_statement=args.sql))
     return 0
 
 
 def vrt(args):
-    print ogr2vrt(infile=args.source, layer_list=args.layers)
+    print(ogr2vrt(infile=args.source, layer_list=args.layers))
     return 0
 
 
 def genconfig(args):
     trans = OgrConfig(ds=args.source, model=args.model)
-    print trans.generate_config(args.format, layer_list=args.layers, srs=args.srs)
+    print(trans.generate_config(args.format, layer_list=args.layers,
+                                srs=args.srs))
     return 0
 
 
@@ -48,7 +49,7 @@ def write_enums(args):
     if args.debug:
         os.environ["CPL_DEBUG"] = "on"
     trans = OgrConfig(config=args.config)
-    print trans.write_enum_tables(args.dest, args.format, args.debug)
+    print(trans.write_enum_tables(args.dest, args.format, args.debug))
     return 0
 
 
@@ -57,9 +58,11 @@ def transform(args):
         os.environ["CPL_DEBUG"] = "on"
     trans = OgrConfig(config=args.config, ds=args.source)
     if args.reverse:
-        trans.transform_reverse(args.dest, args.format, layers=args.layers, debug=args.debug)
+        trans.transform_reverse(args.dest, args.format,
+                                layers=args.layers, debug=args.debug)
     else:
-        trans.transform(args.dest, args.format, layers=args.layers, debug=args.debug)
+        trans.transform(args.dest, args.format,
+                        layers=args.layers, debug=args.debug)
     return 0
 
 
@@ -69,23 +72,25 @@ def main():
     parser = argparse.ArgumentParser(
         description="Query and transform OGR compatible vector data")
 
-    #Commands
+    # Commands
     subparsers = parser.add_subparsers(title='commands',
                                        description='valid commands')
-    #Common parameters
+    # Common parameters
     inparam = {
         'help': "input datasource"
-    }
+        }
     outparam = {
         'nargs': '?',
         'help': "output datasource",
         'default': sys.stdout
-    }
+        }
 
-    subparser = subparsers.add_parser('version', help='Show version information')
+    subparser = subparsers.add_parser('version',
+                                      help='Show version information')
     subparser.set_defaults(func=version)
 
-    subparser = subparsers.add_parser('formats', help='List available data formats')
+    subparser = subparsers.add_parser('formats',
+                                      help='List available data formats')
     subparser.set_defaults(func=formats)
 
     subparser = subparsers.add_parser('info', help='Information about data')
@@ -98,32 +103,42 @@ def main():
     subparser.add_argument('sql', metavar='sql-query', help='SQL query')
     subparser.set_defaults(func=sql)
 
-    subparser = subparsers.add_parser('vrt', help='Create VRT from data source')
+    subparser = subparsers.add_parser('vrt',
+                                      help='Create VRT from data source')
     subparser.add_argument('source', **inparam)
     subparser.add_argument('layers', nargs='*', help='layer names')
     subparser.set_defaults(func=vrt)
 
-    subparser = subparsers.add_parser('genconfig', help='Generate OGR configuration from data source')
+    subparser = subparsers.add_parser(
+        'genconfig', help='Generate OGR configuration from data source')
     subparser.add_argument('source', **inparam)
     subparser.add_argument('layers', nargs='*', help='layer names')
-    subparser.add_argument('--format', default='PostgreSQL', help='Destination format')
-    subparser.add_argument('--model', default=None, help='Data model specification')
+    subparser.add_argument('--format', default='PostgreSQL',
+                           help='Destination format')
+    subparser.add_argument('--model', default=None,
+                           help='Data model specification')
     subparser.add_argument('--srs', default=None, help='Assign SRS to layers')
     subparser.set_defaults(func=genconfig)
 
-    subparser = subparsers.add_parser('write-enums', help='Write tables with enumeration values')
+    subparser = subparsers.add_parser(
+        'write-enums', help='Write tables with enumeration values')
     subparser.add_argument('dest', **outparam)
-    subparser.add_argument('--debug', default=False, action='store_true', help='Display debugging information')
-    subparser.add_argument('--format', default='PostgreSQL', help='Destination format')
+    subparser.add_argument('--debug', default=False, action='store_true',
+                           help='Display debugging information')
+    subparser.add_argument('--format', default='PostgreSQL',
+                           help='Destination format')
     subparser.add_argument('--config', help='OGR configuration')
     subparser.set_defaults(func=write_enums)
 
-    subparser = subparsers.add_parser('transform', help='Transform data source based on OGR configuration')
+    subparser = subparsers.add_parser(
+        'transform', help='Transform data source based on OGR configuration')
     subparser.add_argument('dest', **outparam)
     subparser.add_argument('source', **inparam)
     subparser.add_argument('layers', nargs='*', help='layer names')
-    subparser.add_argument('--debug', default=False, action='store_true', help='Display debugging information')
-    subparser.add_argument('--reverse', default=False, action='store_true', help='Reverse transformation')
+    subparser.add_argument('--debug', default=False, action='store_true',
+                           help='Display debugging information')
+    subparser.add_argument('--reverse', default=False, action='store_true',
+                           help='Reverse transformation')
     subparser.add_argument('--format', default=None, help='Destination format')
     subparser.add_argument('--config', help='OGR configuration')
     subparser.set_defaults(func=transform)
