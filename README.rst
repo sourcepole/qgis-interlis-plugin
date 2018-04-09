@@ -207,11 +207,11 @@ Running tests:
 
 ::
 
-    apt-get install python-nose
+    apt-get install python3-nose
 
 ::
 
-    nosetests
+    python3 -m "nose"
 
 For running ogr commands from source tree:
 
