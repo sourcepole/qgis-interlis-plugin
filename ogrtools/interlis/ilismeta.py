@@ -28,7 +28,7 @@ DISPLAY_ATTRS = {
     "EnumType": "shape=doubleoctagon",
     # Edges
     "Super": "color=red,fontcolor=red"
-}
+    }
 
 IGNORED_EDGE_TAGS = ["ElementInPackage", "AllowedInBasket", "AxisSpec", "Unit"]
 
@@ -164,12 +164,13 @@ class ImdParser():
         gml = ElementTree.Element('FeatureCollection')
         gml.set('xmlns', 'http://ogr.maptools.org/')
         gml.set('xmlns:gml', 'http://www.opengis.net/gml')
-        #<ogr:FeatureCollection
+        # <ogr:FeatureCollection
         #     xmlns:ogr="http://ogr.maptools.org/"
         #     xmlns:gml="http://www.opengis.net/gml">
         enumIdx = 0
         for name, defs in enum_tables.items():
-            # enum name should not be longer than 63 chars, which is PG default name limit
+            # enum name should not be longer than 63 chars, which is PG default
+            # name limit
             # Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonenflaeche.Herkunft.TYPE
             # -> enumXX_herkunft
             enumTypeName = string.rsplit(name, '.', maxsplit=1)[-1]
@@ -195,7 +196,7 @@ class ImdParser():
 
     def imd_to_dot(self):
         """Generate dot graph from IlisMeta file"""
-        print "digraph {"
+        print("digraph {")
         models = self._tree.findall(
             "xmlns:DATASECTION/xmlns:IlisMeta07.ModelData", self._ns) or []
         modelno = 0
@@ -204,9 +205,9 @@ class ImdParser():
             bid = nodeid(model.get("BID"))
             if bid == 'MODEL_INTERLIS':
                 continue
-            print "subgraph {"
+            print("subgraph {")
             modelno = modelno + 1
-            print "node [style=filled,colorscheme=accent8,fillcolor={}]".format(modelno)
+            print("node [style=filled,colorscheme=accent8,fillcolor={}]".format(modelno))
             for node in model:
                 tag = node.tag.replace(
                     "{http://www.interlis.ch/INTERLIS2.3}IlisMeta07.ModelData.", "")
@@ -231,7 +232,7 @@ class ImdParser():
                         taggroup[tag] = []
                     taggroup[tag].append(tid)
                     display_attrs = DISPLAY_ATTRS.get(tag, "")
-                    print tid + ' [label="' + name + "\\n" + tag + multistr + '" ' + display_attrs + "]"
+                    print(tid + ' [label="' + name + "\\n" + tag + multistr + '" ' + display_attrs + "]")
                     for refnode in node.findall("./*[@REF]"):
                         reftag = refnode.tag.replace(
                             "{http://www.interlis.ch/INTERLIS2.3}", "")
@@ -240,13 +241,13 @@ class ImdParser():
                         if orderpos:
                             reftag = reftag + "({})".format(orderpos)
                         if reftag not in IGNORED_EDGE_TAGS:
-                            print tid + " -> " + nodeid(refnode.get("REF")) + ' [label="' + reftag + multistr + '" ' + display_attrs + "]"
+                            print(tid + " -> " + nodeid(refnode.get("REF")) + ' [label="' + reftag + multistr + '" ' + display_attrs + "]")
                 else:
                     relnodes = node.findall("./*[@REF]")
                     n1 = nodeid(relnodes[0].get("REF"))
-                    #l1 = relnodes[0].tag.replace("{http://www.interlis.ch/INTERLIS2.3}", "")
+                    # l1 = relnodes[0].tag.replace("{http://www.interlis.ch/INTERLIS2.3}", "")
                     n2 = nodeid(relnodes[1].get("REF"))
-                    #l2 = relnodes[1].tag.replace("{http://www.interlis.ch/INTERLIS2.3}", "")
+                    # l2 = relnodes[1].tag.replace("{http://www.interlis.ch/INTERLIS2.3}", "")
                     # print n1 + " -> " + n2 + ' [headlabel="' + l2 + '"
                     # taillabel="' + l1 + '" style=dotted]'
                     orderpos = relnodes[0].get(
@@ -254,13 +255,13 @@ class ImdParser():
                     if tag not in IGNORED_EDGE_TAGS:
                         if orderpos:
                             tag = tag + "({})".format(orderpos)
-                        print n1 + " -> " + n2 + ' [label="' + tag + multistr + '" style=dotted,color=blue,fontcolor=blue]'
-            print "{ rank = same; " + ";".join(taggroup["Class"]) + " }"
+                        print(n1 + " -> " + n2 + ' [label="' + tag + multistr + '" style=dotted,color=blue,fontcolor=blue]')
+            print("{ rank = same; " + ";".join(taggroup["Class"]) + " }")
             if "EnumType" in taggroup:
-                print "{ rank = same; " + ";".join(taggroup["EnumType"]) + " }"
+                print("{ rank = same; " + ";".join(taggroup["EnumType"]) + " }")
 
-            print "}"
-        print "}"
+            print("}")
+        print("}")
 
 
 def main(argv):
@@ -268,14 +269,16 @@ def main(argv):
     fn = argv[2]
     parser = ImdParser(fn)
     if output == 'enumgml':
-        print prettify(parser.extract_enums_asgml())
+        print(prettify(parser.extract_enums_asgml()))
     elif output == 'enumjson':
         enum_tables = parser.extract_enums()
-        print json.dumps(enum_tables, indent=2)
+        print(json.dumps(enum_tables, indent=2))
     elif output == 'dot':
-        #./ogrtools/interlis/ilismeta.py dot tests/data/ili/RoadsExdm2ien.imd | dot -Tsvg >tests/data/ili/RoadsExdm2ien.imd.svg
+        # ./ogrtools/interlis/ilismeta.py dot tests/data/ili/RoadsExdm2ien.imd
+        # | dot -Tsvg >tests/data/ili/RoadsExdm2ien.imd.svg
         parser.imd_to_dot()
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

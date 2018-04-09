@@ -24,5 +24,5 @@
 
 def classFactory(iface):
     # load Interlis class from file Interlis
-    from interlis import Interlis
+    from .interlis import Interlis
     return Interlis(iface)

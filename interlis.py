@@ -20,15 +20,15 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import QSettings, QCoreApplication, QTranslator, qVersion
-from PyQt4.QtGui import QAction, QIcon, QDockWidget
-#from qgis.core import *
+from qgis.PyQt.QtCore import QSettings, QCoreApplication, QTranslator
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction, QDockWidget
+from qgis.core import QgsApplication
 # Initialize Qt resources from file resources.py
-import resources_rc
-from ogrtools.pyogr.ogrinfo import ogr_version_num
-from processing.core.Processing import Processing
-from algorithms.interlis_provider import InterlisProvider
-from interlisdialog import InterlisDialog
+from . import resources_rc
+from .ogrtools.pyogr.ogrinfo import ogr_version_num
+from .algorithms.interlis_provider import InterlisProvider
+from .interlisdialog import InterlisDialog
 import os.path
 
 
@@ -47,9 +47,7 @@ class Interlis:
         if os.path.exists(localePath):
             self.translator = QTranslator()
             self.translator.load(localePath)
-
-            if qVersion() > '4.3.3':
-                QCoreApplication.installTranslator(self.translator)
+            QCoreApplication.installTranslator(self.translator)
 
         if ogr_version_num() < 2000200:
             raise ImportError("GDAL/OGR 2.0.2 or newer required")
@@ -71,10 +69,10 @@ class Interlis:
         self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToMenu(u"&Interlis", self.action)
 
-        Processing.addProvider(self.provider)
+        QgsApplication.processingRegistry().addProvider(self.provider)
 
     def unload(self):
-        Processing.removeProvider(self.provider)
+        QgsApplication.processingRegistry().removeProvider(self.provider)
         # Remove the plugin menu item and icon
         self.iface.removePluginMenu(u"&Interlis", self.action)
         self.iface.removeToolBarIcon(self.action)

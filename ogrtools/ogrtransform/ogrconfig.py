@@ -2,8 +2,7 @@ import json
 from xml.etree import ElementTree
 import tempfile
 import os
-from format_handler import FormatHandlerRegistry
-from ..interlis.ilismeta import prettify
+from .format_handler import FormatHandlerRegistry
 try:
     from osgeo import ogr
     from osgeo import gdal

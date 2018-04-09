@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from qgis.core import *
-from ui_sublayersdialog import Ui_SublayersDialog
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QTreeWidgetItem, QDialog, QAbstractItemView
+from .ui_sublayersdialog import Ui_SublayersDialog
 
 
 class SortTreeWidgetItem(QTreeWidgetItem):
@@ -17,7 +16,8 @@ class SortTreeWidgetItem(QTreeWidgetItem):
     def __lt__(self, otherItem):
         sortColumn = self.treeWidget().sortColumn()
         if sortColumn == 0 or sortColumn == 2:
-            if otherItem.text(sortColumn).toInt() > self.text(sortColumn).toInt():
+            if otherItem.text(sortColumn).toInt() > self.text(
+                    sortColumn).toInt():
                 return True
             else:
                 return False

@@ -3,7 +3,7 @@ import tempfile
 import mmap
 import re
 from xml.etree import ElementTree
-from java_exec import run_java
+from .java_exec import run_java
 
 
 NS = {'xmlns': "http://www.interlis.ch/INTERLIS2.3"}
@@ -91,7 +91,7 @@ class ModelLoader:
         os.write(fh, ili)
         os.close(fh)
         imd = self._fn + '.imd'  # TODO: use main model as prefix
-        print self.convert_model([ilifn], imd)
+        print(self.convert_model([ilifn], imd))
         os.remove(ilifn)
         return imd
 
