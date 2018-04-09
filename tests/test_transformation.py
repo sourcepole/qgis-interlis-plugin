@@ -25,11 +25,10 @@ def test_shape_to_geojson():
     assert '{ "osm_type": "rail"' in result
     geojsonstart = """{
 "type": "FeatureCollection",
-                                                                                                                                  
 "features": [
 { "type": "Feature", "properties": {"""
     assert geojsonstart in result
-    expected = """osm_id": 35324774.000000 }, "geometry": { "type": "LineString", "coordinates": [ [ 9.542907, 47.20156 ], [ 9.542616, 47.201195 ]"""
+    expected = """osm_id": 35324774.0 }, "geometry": { "type": "LineString", "coordinates": [ [ 9.542907, 47.20156 ], [ 9.542616, 47.201195 ]"""
     assert expected in result
     os.remove(dstfile)
 
