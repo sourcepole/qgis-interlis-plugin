@@ -11,14 +11,14 @@ def test_extract_enums():
 def test_extract_enums_gml():
     parser = ImdParser("./tests/data/ili/Beispiel.imd")
     gml = parser.extract_enums_asgml()
-    print gml
-    assert "<gml:featureMember><enum2_Art><id>1</id><enum>befestigt</enum><enumtxt>befestigt</enumtxt></enum2_Art></gml:featureMember>" in gml
+    print(gml)
+    assert b"gml:featureMember><gml:featureMember><enum3_Art><id>1</id><enum>befestigt</enum><enumtxt>befestigt</enumtxt></enum3_Art>" in gml
 
 
 def test_extract_extended_enums():
     parser = ImdParser("./tests/data/ili/RoadsExdm2ben.imd")
     enum_tables = parser.extract_enums()
-    print enum_tables
+    print(enum_tables)
     assert enum_tables['RoadsExdm2ben.Roads.RoadSign.Type'] == [
         {'enumtxt': 'prohibition', 'enum': 'prohibition', 'id': 0},
         {'enumtxt': 'indication', 'enum': 'indication', 'id': 1},
@@ -27,7 +27,7 @@ def test_extract_extended_enums():
 
     parser = ImdParser("./tests/data/ili/RoadsExdm2ien.imd")
     enum_tables = parser.extract_enums()
-    print enum_tables
+    print(enum_tables)
     assert enum_tables['RoadsExdm2ben.Roads.RoadSign.Type'] == [
         {'enumtxt': 'prohibition', 'enum': 'prohibition', 'id': 0},
         {'enumtxt': 'indication', 'enum': 'indication', 'id': 1},
@@ -49,5 +49,5 @@ def test_extract_extended_enums():
 def test_gen_empty_transfer():
     parser = ImdParser("./tests/data/ili/Beispiel.imd")
     transfer = parser.gen_empty_transfer()
-    print transfer
+    print(transfer)
     assert """<MODEL NAME="Beispiel">""" in transfer

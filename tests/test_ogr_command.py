@@ -7,10 +7,10 @@ def test_ogr_transform():
     __, dstfile = tempfile.mkstemp(suffix='.gml')
     out = os.popen(
         "PYTHONPATH=. ogr_cli/ogr.py transform --format GML --config tests/data/ili/RoadsExdm2ien.cfg %s tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd" % dstfile).read()
-    print out
+    print(out)
     assert out == ""
     gml = codecs.open(dstfile, encoding='utf-8').read()
-    print dstfile
+    print(dstfile)
     expected = """<gml:featureMember>
     <ogr:roadsign fid="roadsign.0">
       <ogr:position><gml:Point srsName="EPSG:21781"><gml:coordinates>69.389,92.056</gml:coordinates></gml:Point></ogr:position>
@@ -26,7 +26,7 @@ def test_ogr_transform():
 def test_generate_usage_markdown():
     cfg_example = os.popen(
         "PYTHONPATH=. ogr_cli/ogr.py genconfig ./tests/data/ili/roads23.xtf,./tests/data/ili/RoadsExdm2ben.imd --model=./tests/data/ili/RoadsExdm2ben.imd").read()
-    print cfg_example
+    print(cfg_example)
 
     ogr_help = os.popen("PYTHONPATH=. ogr_cli/ogr.py --help").read()
     ogr_write_enums = os.popen("PYTHONPATH=. ogr_cli/ogr.py write-enums -h").read()
@@ -39,32 +39,32 @@ def test_generate_usage_markdown():
     "railway": {
       "fields": {
         "keyvalue": {
-          "src": "keyvalue", 
-          "type": "String", 
+          "src": "keyvalue",
+          "type": "String",
           "width": 80
-        }, 
+        },
         "lastchange": {
-          "src": "lastchange", 
-          "type": "Date", 
+          "src": "lastchange",
+          "type": "Date",
           "width": 10
-        }, 
+        },
         "type": {
-          "src": "type", 
-          "type": "String", 
+          "src": "type",
+          "type": "String",
           "width": 255
-        }, 
+        },
         "name": {
-          "src": "name", 
-          "type": "String", 
+          "src": "name",
+          "type": "String",
           "width": 255
-        }, 
+        },
         "osm_id": {
-          "src": "osm_id", 
-          "type": "Real", 
+          "src": "osm_id",
+          "type": "Real",
           "width": 11
         }
-      }, 
-      "geometry_type": "LineString", 
+      },
+      "geometry_type": "LineString",
       "src_layer": "railway"
     }
   }
@@ -230,9 +230,9 @@ Example:
 ```
 ogr transform --config=roads.cfg "PG:dbname=ogrili" RoadsExdm2ien.xml
 ```"""
-    print template.format(ogr_help=ogr_help,
+    print(template.format(ogr_help=ogr_help,
                           vrt=vrt,
                           config_example=config_example,
                           ogr_write_enums=ogr_write_enums,
                           ogr_transform=ogr_transform
-                          )
+                          ))

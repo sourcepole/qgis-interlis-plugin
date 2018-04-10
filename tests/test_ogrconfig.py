@@ -6,49 +6,49 @@ def test_shape_config():
     cfg = OgrConfig(ds="tests/data/osm/railway.shp")
     cfgjson = cfg.generate_config(dst_format='PostgreSQL')
     expected = """{
-  "//": "OGR transformation configuration", 
-  "dst_dsco": {}, 
+  "//": "OGR transformation configuration",
+  "src_format": "ESRI Shapefile",
+  "dst_format": "PostgreSQL",
+  "dst_dsco": {},
   "dst_lco": {
     "SCHEMA": "public"
-  }, 
+  },
   "layers": {
     "railway": {
+      "src_layer": "railway",
       "fields": {
-        "keyvalue": {
-          "src": "keyvalue", 
-          "type": "String", 
-          "width": 80
-        }, 
-        "lastchange": {
-          "src": "lastchange", 
-          "type": "Date", 
-          "width": 10
-        }, 
         "type": {
-          "src": "type", 
-          "type": "String", 
+          "src": "type",
+          "type": "String",
           "width": 255
-        }, 
-        "name": {
-          "src": "name", 
-          "type": "String", 
-          "width": 255
-        }, 
+        },
         "osm_id": {
-          "src": "osm_id", 
-          "type": "Integer64", 
+          "src": "osm_id",
+          "type": "Integer64",
           "width": 11
+        },
+        "lastchange": {
+          "src": "lastchange",
+          "type": "Date",
+          "width": 10
+        },
+        "name": {
+          "src": "name",
+          "type": "String",
+          "width": 255
+        },
+        "keyvalue": {
+          "src": "keyvalue",
+          "type": "String",
+          "width": 80
         }
-      }, 
-      "geometry_type": "LineString", 
-      "src_layer": "railway", 
-      "geom_fields": {}
+      },
+      "geom_fields": {},
+      "geometry_type": "LineString"
     }
-  }, 
-  "src_format": "ESRI Shapefile", 
-  "dst_format": "PostgreSQL"
+  }
 }"""
-    print cfgjson
+    print(cfgjson)
     assert cfgjson == expected
 
 
@@ -57,31 +57,31 @@ def test_ili_config():
         ds="./tests/data/ili/roads23.xtf,./tests/data/ili/RoadsExdm2ien.imd")
     cfgjson = cfg.generate_config(dst_format='PostgreSQL', srs=21781)
     expected = """"roadsexdm2ien_roadsextended_streetaxis": {
+      "src_layer": "RoadsExdm2ien.RoadsExtended.StreetAxis",
       "fields": {
         "tid": {
-          "src": "TID", 
+          "src": "TID",
           "type": "String"
-        }, 
+        },
         "street": {
-          "src": "Street", 
+          "src": "Street",
           "type": "String"
-        }, 
+        },
         "precision": {
-          "src": "Precision", 
+          "src": "Precision",
           "type": "String"
         }
-      }, 
-      "geometry_type": "MultiLineString", 
-      "src_layer": "RoadsExdm2ien.RoadsExtended.StreetAxis", 
+      },
       "geom_fields": {
         "geometry": {
-          "src": "Geometry", 
-          "type": "MultiLineString", 
+          "src": "Geometry",
+          "type": "MultiLineString",
           "srs": 21781
         }
-      }
+      },
+      "geometry_type": "MultiLineString"
     }"""
-    print cfgjson
+    print(cfgjson)
     assert expected in cfgjson
 
 
@@ -89,43 +89,41 @@ def test_np():
     cfg = OgrConfig(ds="tests/data/np/NP_Example.xtf,tests/data/np/NP_73_CH_de_ili2.imd",
                     model="tests/data/np/NP_73_CH_de_ili2.imd")
     cfgjson = cfg.generate_config(dst_format='PostgreSQL')
-    expected = """"n0_grundnutzung_zonenflaeche": {
+    expected = """"n0_grundnutzung_zonenflaeche'": {
+      "src_layer": "Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonenflaeche",
       "fields": {
-        "zonentyp_1": {
-          "src": "Zonentyp_1", 
-          "type": "String"
-        }, 
-        "herkunft": {
-          "src": "Herkunft", 
-          "type": "String"
-        }, 
-        "mutation": {
-          "src": "Mutation", 
-          "type": "String"
-        }, 
         "tid": {
-          "src": "TID", 
+          "src": "TID",
           "type": "String"
-        }, 
+        },
+        "herkunft": {
+          "src": "Herkunft",
+          "type": "String"
+        },
         "qualitaet": {
-          "src": "Qualitaet", 
+          "src": "Qualitaet",
           "type": "String"
-        }, 
+        },
         "bemerkungen": {
-          "src": "Bemerkungen", 
+          "src": "Bemerkungen",
+          "type": "String"
+        },
+        "mutation": {
+          "src": "Mutation",
+          "type": "String"
+        },
+        "zonentyp_1": {
+          "src": "Zonentyp_1",
           "type": "String"
         }
-      }, 
-      "geometry_type": "Polygon", 
-      "src_layer": "Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonenflaeche", 
+      },
       "geom_fields": {
         "geometrie": {
-          "src": "Geometrie", 
+          "src": "Geometrie",
           "type": "Polygon"
         }
-      }
-    }"""
-    print cfgjson
+      }"""
+    print(cfgjson)
     assert expected in cfgjson
 
 
@@ -140,13 +138,13 @@ def test_layer_info():
 
     cfg.generate_config(dst_format='PostgreSQL')
     assert cfg.is_loaded()
-    print cfg.layer_names()
+    print(cfg.layer_names())
     assert "roadsexdm2ien_roadsextended_roadsign" in cfg.layer_names()
-    print cfg.enum_names()
+    print(cfg.enum_names())
     assert "_type" in str(cfg.enum_names())
 
-    print cfg.layer_infos()
-    print cfg.enum_infos()
+    print(cfg.layer_infos())
+    print(cfg.enum_infos())
     assert {'name': 'roadsexdm2ien_roadsextended_roadsign',
             'geom_field': 'position'} in cfg.layer_infos()
     assert {'name': 'roadsexdm2ben_roads_lattrs'} in cfg.layer_infos()
@@ -157,22 +155,22 @@ def test_enums():
     cfg = OgrConfig(ds="./tests/data/ili/roads23.xtf,./tests/data/ili/RoadsExdm2ien.imd",
                     model="./tests/data/ili/RoadsExdm2ien.imd")
     cfgjson = cfg.generate_config(dst_format='PostgreSQL')
-    expected = """_lart": {
-      "src_name": "RoadsExdm2ben.Roads.LAttrs.LArt", 
+    expected = """"enum48_lart": {
+      "src_name": "RoadsExdm2ben.Roads.LAttrs.LArt",
       "values": [
         {
-          "enumtxt": "welldefined", 
-          "enum": "welldefined", 
-          "id": 0
-        }, 
+          "id": 0,
+          "enum": "welldefined",
+          "enumtxt": "welldefined"
+        },
         {
-          "enumtxt": "fuzzy", 
-          "enum": "fuzzy", 
-          "id": 1
+          "id": 1,
+          "enum": "fuzzy",
+          "enumtxt": "fuzzy"
         }
       ]
     }"""
-    print cfgjson
+    print(cfgjson)
     assert expected in cfgjson
 
 
@@ -190,7 +188,7 @@ def test_vrt():
       <SRS>EPSG:21781</SRS>
     </GeometryField>
   </OGRVRTLayer>"""
-    print vrt
+    print(vrt)
     assert expected in vrt
 
 
@@ -207,7 +205,7 @@ def test_reverse_vrt():
       <GeometryType>wkbPoint</GeometryType>
     </GeometryField>
   </OGRVRTLayer>"""
-    print vrt
+    print(vrt)
     assert expected in vrt
 
 
@@ -237,5 +235,5 @@ def test_multigeom_vrt():
       <SRS>EPSG:21781</SRS>
     </GeometryField>
   </OGRVRTLayer>"""
-    print vrt
+    print(vrt)
     assert expected in vrt

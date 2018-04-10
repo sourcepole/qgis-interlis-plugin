@@ -32,8 +32,7 @@ def test_detect_models_ili2():
         "./tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf")
     models = loader.detect_models()
     names = map(lambda model: model.name, models)
-    assert names == [
-        "CodeISO", "chGeoId10", "MultilingualText09", "OeREBKRM09", "OeREBKRM09vs", "OeREBKRM09trsfr"]
+    assert set(names) == {'OeREBKRM09trsfr', 'MultilingualText09', 'chGeoId10', 'CodeISO', 'OeREBKRM09vs', 'OeREBKRM09'}
     assert models[0].version == "20060808"
     assert models[0].uri == "http://www.kogis.ch"
 

@@ -17,12 +17,12 @@ def test_shape_to_geojson():
     __, dstfile = tempfile.mkstemp(suffix='.json')
     os.remove(dstfile)
     trans.transform(dstfile, "GeoJSON")
-    print dstfile
+    print(dstfile)
     result = codecs.open(dstfile, encoding='utf-8').read()
     #Default import
     assert '{ "type": "rail"' not in result
     #Mapping from config
-    assert '{ "osm_type": "rail"' in result
+    assert '"osm_type": "rail"' in result
     geojsonstart = """{
 "type": "FeatureCollection",
 "features": [
@@ -41,9 +41,9 @@ def test_ili_to_geojson():
     __, dstfile = tempfile.mkstemp(suffix='.json')
     os.remove(dstfile)
     trans.transform(dstfile, "GeoJSON", layers=["streetaxis"])
-    print dstfile
+    print(dstfile)
     result = codecs.open(dstfile, encoding='utf-8').read()
-    expected = """{ "type": "Feature", "properties": { "tid": "8", "precision": "precise", "street_id": 1 }, "geometry": { "type": "LineString", "coordinates": [ [ 55.6, 37.649 ], [ 15.573, 25.785 ] ] } }"""
+    expected = """{ "type": "Feature", "properties": { "tid": "8", "street_id": 1, "precision": "precise" }, "geometry": { "type": "LineString", "coordinates": [ [ 55.6, 37.649 ], [ 15.573, 25.785 ] ] } }"""
     assert expected in result
     os.remove(dstfile)
 
@@ -56,7 +56,7 @@ def test_geojson_reverse_to_ili():
     #os.remove(dstfile)
     trans.transform_reverse(dstfile + ",tests/data/ili/RoadsExdm2ien.imd",
                             layers=["RoadsExdm2ien.RoadsExtended.StreetAxis"])
-    print dstfile
+    print(dstfile)
     result = codecs.open(dstfile, encoding='utf-8').read()
     expected = """<DATASECTION>
 <RoadsExdm2ien.RoadsExtended BID="RoadsExdm2ien.RoadsExtended">
@@ -83,7 +83,7 @@ def manualtest_ili_to_spatialite():
     os.remove(dstfile)
     # Takes more than 2'
     trans.transform(dstfile, "SQLite")
-    print dstfile
+    print(dstfile)
     result = os.popen("echo .dump | sqlite3 %s" % dstfile).read()
     assert False
     os.remove(dstfile)
@@ -98,7 +98,7 @@ def test_ili_to_postgis():
         ds="tests/data/np/NP_Example.xtf,tests/data/np/NP_73_CH_de_ili2.imd")
     __, dstfile = tempfile.mkstemp(suffix='.sql')
     trans.transform(dstfile, "PGDump")
-    print dstfile
+    print(dstfile)
     sql = codecs.open(dstfile, encoding='utf-8').read()
     assert """CREATE TABLE "public"."n0_grundnutzung_zonenflaeche" (""" in sql
     assert """SELECT AddGeometryColumn('public','n0_grundnutzung_zonenflaeche','geometrie',21781,'POLYGON',2);""" in sql
@@ -115,7 +115,7 @@ def test_ili_schema_to_postgis():
         ds=transferfn+",tests/data/np/NP_73_CH_de_ili2.imd")
     __, dstfile = tempfile.mkstemp(suffix='.sql')
     trans.transform(dstfile, "PGDump")
-    print dstfile
+    print(dstfile)
     sql = codecs.open(dstfile, encoding='utf-8').read()
     assert """CREATE TABLE "public"."n0_grundnutzung_zonenflaeche" (""" in sql
     assert """SELECT AddGeometryColumn('public','n0_grundnutzung_zonenflaeche','geometrie',21781,'POLYGON',2);""" in sql
@@ -131,7 +131,7 @@ def manualtest_ili_with_struct_to_gml():
     __, dstfile = tempfile.mkstemp(suffix='.gml')
     os.remove(dstfile)
     trans.transform(dstfile, "GML")
-    print dstfile
+    print(dstfile)
     assert False
     os.remove(dstfile)
 
@@ -144,7 +144,7 @@ def test_encoding():
     __, dstfile = tempfile.mkstemp(suffix='.gml')
     os.remove(dstfile)
     trans.transform(dstfile, "GML")
-    print dstfile
+    print(dstfile)
     gml = codecs.open(dstfile, encoding='utf-8').read()
     assert u"Bundesgesetz über die Raumplanung" in gml
     os.remove(dstfile)
@@ -155,7 +155,7 @@ def test_encoding():
     __, dstfile = tempfile.mkstemp(suffix='.gml')
     os.remove(dstfile)
     trans.transform(dstfile, "GML")
-    print dstfile
+    print(dstfile)
     gml = codecs.open(dstfile, encoding='utf-8').read()
     assert u"Bundesgesetz über die Raumplanung" not in gml
     os.remove(dstfile)
@@ -168,13 +168,13 @@ def test_ili_to_gml():
     __, dstfile = tempfile.mkstemp(suffix='.gml')
     os.remove(dstfile)
     trans.transform(dstfile, "GML")
-    print dstfile
+    print(dstfile)
     gml = codecs.open(dstfile, encoding='utf-8').read()
 
     # GML -> XTF
     __, xtffile = tempfile.mkstemp(suffix='.xtf')
     trans.transform_reverse(xtffile + ",tests/data/np/NP_73_CH_de_ili2.imd")
-    print xtffile
+    print(xtffile)
     xtf = codecs.open(xtffile, encoding='utf-8').read()
     zonentyp_kt = """<Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonentyp_Kt TID="xz4e43cb280000000a">
 <Identifikator>142</Identifikator>
@@ -200,7 +200,7 @@ def test_ili_to_gml():
                        ds=xtffile + ",tests/data/np/NP_73_CH_de_ili2.imd")
     __, gmlfile2 = tempfile.mkstemp(suffix='.gml')
     trans.transform(gmlfile2, "GML")
-    print gmlfile2
+    print(gmlfile2)
     gml2 = codecs.open(gmlfile2, encoding='utf-8').read()
 
     gml = re.sub(r'tmp.+.xsd', 'tmpXXX.xsd', gml, count=1)

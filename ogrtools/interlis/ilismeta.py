@@ -106,7 +106,7 @@ class ImdParser():
                 self._collect_enums(top_node, enum_table, 0)
                 enumTypeName = top_node.find(
                     "xmlns:EnumType", self._ns).get('REF')
-                enumTypeName = string.replace(enumTypeName, '.TYPE', '')
+                enumTypeName = str.replace(enumTypeName, '.TYPE', '')
                 enum_tables[enumTypeName] = enum_table
 
         return enum_tables
@@ -149,7 +149,7 @@ class ImdParser():
             enum_record = {}
             enum_record["id"] = idx  # str(idx)
             idx = idx + 1
-            enum = string.replace(
+            enum = str.replace(
                 enumNode.get("TID"), top_node.get("TID") + '.', '')
             enum_record["enum"] = enum
             enum_record["enumtxt"] = enum
@@ -173,7 +173,7 @@ class ImdParser():
             # name limit
             # Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonenflaeche.Herkunft.TYPE
             # -> enumXX_herkunft
-            enumTypeName = string.rsplit(name, '.', maxsplit=1)[-1]
+            enumTypeName = str.rsplit(name, '.', maxsplit=1)[-1]
             curEnumName = "enum%d_%s" % (enumIdx, enumTypeName)
             enumIdx = enumIdx + 1
             for enumdef in defs:
