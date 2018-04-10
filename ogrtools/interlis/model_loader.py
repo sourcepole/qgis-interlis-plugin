@@ -35,9 +35,9 @@ class ModelLoader:
         header = f.read(1000)
         f.close()
 
-        if "interlis.ch/INTERLIS2" in header:
+        if b"interlis.ch/INTERLIS2" in header:
             return 'Interlis 2'
-        elif "SCNT" in header:
+        elif b"SCNT" in header:
             return 'Interlis 1'
         else:
             return None
@@ -60,7 +60,7 @@ class ModelLoader:
             size = os.stat(self._fn).st_size
             data = mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ)
             self.models = []
-            m = re.search(r'<MODELS>.+?</MODELS>', data, re.DOTALL)
+            m = re.search(b'<MODELS>.+?</MODELS>', data, re.DOTALL)
             if m:
                 tree = ElementTree.fromstring(m.group())
                 for elem in tree.iterfind('MODEL'):

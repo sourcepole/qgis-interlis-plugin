@@ -31,7 +31,7 @@ class FormatHandler:
     def shorten_name(self, src_name, prefix, splitchar='.'):
         # Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonenflaeche.Herkunft
         # -> enumXX_herkunft
-        short_name = string.rsplit(src_name, splitchar, maxsplit=1)[-1]
+        short_name = str.rsplit(str(src_name), splitchar, 1)[-1]
         short_name = "%s%d_%s" % (prefix, self._name_seq, short_name)
         self._name_seq = self._name_seq + 1
         return short_name
@@ -50,11 +50,11 @@ class PgFormatHandler(FormatHandler):
     def launder_name(self, src_name):
         # OGRPGDataSource::LaunderName
         # return re.sub(r"[#'-]", '_', src_name.lower())
-        name = unicode(src_name).lower().encode('ascii', 'replace')
+        name = str(src_name).lower().encode('ascii', 'replace')
         if len(name) > self.max_len - 7:
             return self.shorten_name(name, 'n')
         else:
-            return re.compile("\W+", re.UNICODE).sub("_", name)
+            return re.compile("\W+", re.IGNORECASE).sub("_", name.decode('utf-8'))
 
     def default_layer_creation_options(self):
         # see http://www.gdal.org/ogr/drv_pg.html Layer Creation Options
@@ -68,7 +68,7 @@ class SpatiaLiteFormatHandler(FormatHandler):
 
     def launder_name(self, src_name):
         name = unicode(src_name).lower().encode('ascii', 'replace')
-        return re.compile("\W+", re.UNICODE).sub("_", name)
+        return re.compile("\W+", re.IGNORECASE).sub("_", name.decode('utf-8'))
 
     def default_ds_creation_options(self):
         return {'SPATIALITE': 'YES'}
