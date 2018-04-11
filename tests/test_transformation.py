@@ -4,13 +4,14 @@ import os
 import tempfile
 import re
 import codecs
+import json
 from osgeo import gdal
 from ogrtools.ogrtransform.ogrconfig import OgrConfig
 from ogrtools.interlis.ilismeta import ImdParser
 
 
 def test_shape_to_geojson():
-    #ogr genconfig --format PostgreSQL tests/data/osm/railway.shp >tests/data/osm/railway.cfg
+    # ogr genconfig --format PostgreSQL tests/data/osm/railway.shp >tests/data/osm/railway.cfg
     trans = OgrConfig(
         config="tests/data/osm/railway.cfg",
         ds="tests/data/osm/railway.shp")
@@ -19,22 +20,26 @@ def test_shape_to_geojson():
     trans.transform(dstfile, "GeoJSON")
     print(dstfile)
     result = codecs.open(dstfile, encoding='utf-8').read()
-    #Default import
+    # Default import
     assert '{ "type": "rail"' not in result
-    #Mapping from config
+    # Mapping from config
     assert '"osm_type": "rail"' in result
     geojsonstart = """{
 "type": "FeatureCollection",
-"features": [
-{ "type": "Feature", "properties": {"""
+"name": "railways",
+"crs": { "type": "name", "properties": {"""
     assert geojsonstart in result
-    expected = """osm_id": 35324774.0 }, "geometry": { "type": "LineString", "coordinates": [ [ 9.542907, 47.20156 ], [ 9.542616, 47.201195 ]"""
-    assert expected in result
+    expected = {'geometry': {'type': 'LineString', 'coordinates': [[9.607321, 47.243618], [9.606866, 47.24333], [9.606458, 47.24304], [9.605599, 47.24239], [9.604964, 47.241844], [9.604479, 47.241367], [9.604155, 47.241047], [9.603565, 47.240444], [9.603248, 47.24009], [9.603007, 47.23979], [9.602733, 47.23939]]}, 'properties': {'keyvalue': '"usage"=>"main", "railway"=>"rail", "service"=>"siding", "operator"=>"Ã\x96BB", "el', 'changed_at': '2009/08/15', 'osm_type': 'rail', 'osm_id': 9440158.0}, 'type': 'Feature'}
+
+    # keep going for every key foudn in the first feature
+    for key in json.loads(result)['features'][0].keys():
+        # check if the key/value pair in the json file are as expected
+        assert json.loads(result)['features'][0][key] == expected[key]
     os.remove(dstfile)
 
 
 def test_ili_to_geojson():
-    #ogr genconfig --format PostgreSQL tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd --model tests/data/ili/RoadsExdm2ien.imd --srs=EPSG:21781 >tests/data/ili/RoadsExdm2ien.cfg
+    # ogr genconfig --format PostgreSQL tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd --model tests/data/ili/RoadsExdm2ien.imd --srs=EPSG:21781 >tests/data/ili/RoadsExdm2ien.cfg
     trans = OgrConfig(
         config="tests/data/ili/RoadsExdm2ien.cfg",
         ds="tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd")
@@ -43,17 +48,31 @@ def test_ili_to_geojson():
     trans.transform(dstfile, "GeoJSON", layers=["streetaxis"])
     print(dstfile)
     result = codecs.open(dstfile, encoding='utf-8').read()
-    expected = """{ "type": "Feature", "properties": { "tid": "8", "street_id": 1, "precision": "precise" }, "geometry": { "type": "LineString", "coordinates": [ [ 55.6, 37.649 ], [ 15.573, 25.785 ] ] } }"""
-    assert expected in result
+    expected = """{
+"type": "FeatureCollection",
+"name": "streetaxis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::21781" } },
+"features": [
+{ "type": "Feature", "properties": { "street_id": 1, "tid": "8", "precision": "precise" }, "geometry": { "type": "LineString", "coordinates": [ [ 55.6, 37.649 ], [ 15.573, 25.785 ] ] } },
+{ "type": "Feature", "properties": { "street_id": 1, "tid": "9", "precision": "precise" }, "geometry": { "type": "LineString", "coordinates": [ [ 55.6, 37.649 ], [ 94.99, 50.109 ] ] } },
+{ "type": "Feature", "properties": { "street_id": 1, "tid": "10", "precision": "precise" }, "geometry": { "type": "LineString", "coordinates": [ [ 94.99, 50.109 ], [ 101.099, 52.279 ] ] } },
+{ "type": "Feature", "properties": { "street_id": 1, "tid": "11", "precision": "precise" }, "geometry": { "type": "LineString", "coordinates": [ [ 101.099, 52.279 ], [ 126.1, 62.279 ] ] } },
+{ "type": "Feature", "properties": { "street_id": 2, "tid": "12", "precision": "precise" }, "geometry": { "type": "LineString", "coordinates": [ [ 94.99, 50.109 ], [ 89.504, 65.795 ], [ 83.594, 75.598 ], [ 71.774, 80.712 ], [ 11.423, 91.154 ] ] } },
+{ "type": "Feature", "properties": { "street_id": 3, "tid": "13", "precision": "unprecise" }, "geometry": { "type": "LineString", "coordinates": [ [ 101.099, 52.279 ], [ 107.4, 14.603 ] ] } },
+{ "type": "Feature", "properties": { "street_id": 4, "tid": "15", "precision": "unprecise" }, "geometry": { "type": "LineString", "coordinates": [ [ 55.6, 37.649 ], [ 49.359, 56.752 ] ] } }
+]
+}
+"""
+    assert sorted(expected) == sorted(result)
     os.remove(dstfile)
 
 
 def test_geojson_reverse_to_ili():
-    #ogr transform --format GeoJSON --config tests/data/ili/RoadsExdm2ien.cfg tests/data/ili/RoadsExdm2ien_streetaxis.json tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd streetaxis
+    # ogr transform --format GeoJSON --config tests/data/ili/RoadsExdm2ien.cfg tests/data/ili/RoadsExdm2ien_streetaxis.json tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd streetaxis
     trans = OgrConfig(config="tests/data/ili/RoadsExdm2ien.cfg",
                       ds="tests/data/ili/RoadsExdm2ien_streetaxis.json")
     __, dstfile = tempfile.mkstemp(suffix='.xtf')
-    #os.remove(dstfile)
+    # os.remove(dstfile)
     trans.transform_reverse(dstfile + ",tests/data/ili/RoadsExdm2ien.imd",
                             layers=["RoadsExdm2ien.RoadsExtended.StreetAxis"])
     print(dstfile)
@@ -75,7 +94,7 @@ def test_geojson_reverse_to_ili():
 
 
 def manualtest_ili_to_spatialite():
-    #ogr genconfig --format SQLite tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf,tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd --model tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd --srs=EPSG:21781 >tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.cfg
+    # ogr genconfig --format SQLite tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf,tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd --model tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd --srs=EPSG:21781 >tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.cfg
     trans = OgrConfig(
         config="tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.cfg",
         ds="tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf,tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd")
@@ -102,7 +121,8 @@ def test_ili_to_postgis():
     sql = codecs.open(dstfile, encoding='utf-8').read()
     assert """CREATE TABLE "public"."n0_grundnutzung_zonenflaeche" (""" in sql
     assert """SELECT AddGeometryColumn('public','n0_grundnutzung_zonenflaeche','geometrie',21781,'POLYGON',2);""" in sql
-    assert """INSERT INTO "public"."n0_grundnutzung_zonenflaeche" ("geometrie" , "zonentyp_1", "herkunft", "mutation", "tid", "qualitaet") VALUES ('01030000201555000001000000550000007D3F355ECA312541FA7E6ABCDD2E0E41355EBAC9923125411904560EC72D0E41EE7C3FB5923125412DB29DEF9D2C0E4154E3A55B80312541713D0AD7472C0E41A4703DCA7731254183C0CAA11F2C0E414C37898171312541F4FDD478F92B0E414260E5506E3125413D0AD7A3022C0E413F355EFA68312541BC749318122C0E4121B072A8633125416DE7FBA9212C0E4154E3A55B5E31254193180456312C0E41D9CEF7135931254177BE9F1A412C0E414260E5D053312541D122DBF9502C0E418D976E924E3125415C8FC2F5602C0E41448B6CE74A3125411D5A643B6C2C0E419A99995949312541E9263108712C0E418941602544312541A8C64B37812C0E41CBA145F63E31254123DBF97E912C0E415EBA49CC393125415A643BDFA12C0E41448B6CA73431254108AC1C5AB22C0E417B14AE872F3125412DB29DEFC22C0E4104560E6D2A3125410E2DB29DD32C0E41DF4F8D5725312541AC1C5A64E42C0E415839B4C8073125411904560E472D0E41D122DBF9F030254117D9CEF7952D0E410AD7A3B0D83025411F85EB51EE2D0E41E5D0221BAC302541022B87169C2E0E41273108ECA7302541BE9F1A2FAD2E0E41AE47E1FAA6302541D34D6210B12E0E41E9263188A23025417F6ABC74C32E0E41C3F5281C9E3025412DB29DEFD52E0E415C8FC2B599302541DD240681E82E0E41AE47E1FA97302541E5D022DBEF2E0E41B6F3FD54953025414A0C022BFB2E0E413F355EFA90302541FED478E90D2F0E41F853E3A58C302541B4C876BE202F0E41DF4F8D57883025416DE7FBA9332F0E41F853E3E574302541560E2DB2912F0E416F1283C08930254125068195DD2F0E41F4FDD4F8963025411283C0CA0C300E411F85EB519E3025416210583928300E41CDCCCCCCB83025417F6ABC7488300E41333333B3DC302541759318040F310E41B4C8763EE6302541D122DBF9F5300E411283C0CA2A312541EC51B81E42300E41C520B0B230312541C976BE9F32300E413D0AD7633A312541D122DBF988300E41378941E0BD3125414260E5D092320E4114AE4721C2312541931804567C320E41D34D6210E5312541CBA145B6C3310E419EEFA786E6312541BC749318BC310E41986E1203E8312541F6285C8FB4310E41C1CAA185E931254177BE9F1AAD310E418716D90EEB3125413F355EBAA5310E41EC51B89EEC3125410AD7A3709E310E4110583934EE3125411D5A643B97310E41643BDFCFEF31254177BE9F1A90310E41E7FBA971F13125418D976E1289310E419A999919F3312541EC51B81E82310E410C022BC7F4312541068195437B310E41AE47E17AF63125416891ED7C74310E4110583934F83125414260E5D06D310E41C520B0F2F93125416210583967310E41A8C64BB7FB312541FA7E6ABC60310E414C378981FD312541931804565A310E41986E1283FD312541643BDF4F5A310E414260E550FF312541E926310854310E418941602501322541B6F3FDD44D310E4191ED7CFF0232254185EB51B847310E41EC51B8DE0432254185EB51B841310E41986E12C3063225418716D9CE3B310E41273108AC08322541BA490C0236310E4108AC1C9A0A322541AAF1D24D30310E413BDF4F8D0C322541105839B42A310E4152B81E850E322541EE7C3F3525310E414C378981103225414260E5D01F310E41BA490C8212322541C74B37891A310E417B14AE8714322541C3F5285C15310E41B072689116322541F0A7C64B10310E415A643B9F18322541931804560B310E41E7FBA9B11A3225416891ED7C06310E415C8FC2B51A322541C520B07206310E417B14AEC72F322541A8C64B37DA300E41759318C43832254196438B6CCB300E41F0A7C60B2D3225417593180497300E417D3F355ECA312541FA7E6ABCDD2E0E41', 'xz4e43cb2800000014', 'Aufnahme', 'xz4e43d386e7880000', 'xz4e43d63ce7880007', 'AV93');""" in sql
+    assert """INSERT INTO "public"."n0_grundnutzung_zonenflaeche" ("geometrie" ,""" in sql
+    assert '''01030000201555000001000000550000007D3F355ECA312541FA7E6ABCDD2E0E41355EBAC9923125411904560EC72D0E41EE7C3FB5923125412DB29DEF9D2C0E4154E3A55B80312541713D0AD7472C0E41A4703DCA7731254183C0CAA11F2C0E414C37898171312541F4FDD478F92B0E414260E5506E3125413D0AD7A3022C0E413F355EFA68312541BC749318122C0E4121B072A8633125416DE7FBA9212C0E4154E3A55B5E31254193180456312C0E41D9CEF7135931254177BE9F1A412C0E414260E5D053312541D122DBF9502C0E418D976E924E3125415C8FC2F5602C0E41448B6CE74A3125411D5A643B6C2C0E419A99995949312541E9263108712C0E418941602544312541A8C64B37812C0E41CBA145F63E31254123DBF97E912C0E415EBA49CC393125415A643BDFA12C0E41448B6CA73431254108AC1C5AB22C0E417B14AE872F3125412DB29DEFC22C0E4104560E6D2A3125410E2DB29DD32C0E41DF4F8D5725312541AC1C5A64E42C0E415839B4C8073125411904560E472D0E41D122DBF9F030254117D9CEF7952D0E410AD7A3B0D83025411F85EB51EE2D0E41E5D0221BAC302541022B87169C2E0E41273108ECA7302541BE9F1A2FAD2E0E41AE47E1FAA6302541D34D6210B12E0E41E9263188A23025417F6ABC74C32E0E41C3F5281C9E3025412DB29DEFD52E0E415C8FC2B599302541DD240681E82E0E41AE47E1FA97302541E5D022DBEF2E0E41B6F3FD54953025414A0C022BFB2E0E413F355EFA90302541FED478E90D2F0E41F853E3A58C302541B4C876BE202F0E41DF4F8D57883025416DE7FBA9332F0E41F853E3E574302541560E2DB2912F0E416F1283C08930254125068195DD2F0E41F4FDD4F8963025411283C0CA0C300E411F85EB519E3025416210583928300E41CDCCCCCCB83025417F6ABC7488300E41333333B3DC302541759318040F310E41B4C8763EE6302541D122DBF9F5300E411283C0CA2A312541EC51B81E42300E41C520B0B230312541C976BE9F32300E413D0AD7633A312541D122DBF988300E41378941E0BD3125414260E5D092320E4114AE4721C2312541931804567C320E41D34D6210E5312541CBA145B6C3310E419EEFA786E6312541BC749318BC310E41986E1203E8312541F6285C8FB4310E41C1CAA185E931254177BE9F1AAD310E418716D90EEB3125413F355EBAA5310E41EC51B89EEC3125410AD7A3709E310E4110583934EE3125411D5A643B97310E41643BDFCFEF31254177BE9F1A90310E41E7FBA971F13125418D976E1289310E419A999919F3312541EC51B81E82310E410C022BC7F4312541068195437B310E41AE47E17AF63125416891ED7C74310E4110583934F83125414260E5D06D310E41C520B0F2F93125416210583967310E41A8C64BB7FB312541FA7E6ABC60310E414C378981FD312541931804565A310E41986E1283FD312541643BDF4F5A310E414260E550FF312541E926310854310E418941602501322541B6F3FDD44D310E4191ED7CFF0232254185EB51B847310E41EC51B8DE0432254185EB51B841310E41986E12C3063225418716D9CE3B310E41273108AC08322541BA490C0236310E4108AC1C9A0A322541AAF1D24D30310E413BDF4F8D0C322541105839B42A310E4152B81E850E322541EE7C3F3525310E414C378981103225414260E5D01F310E41BA490C8212322541C74B37891A310E417B14AE8714322541C3F5285C15310E41B072689116322541F0A7C64B10310E415A643B9F18322541931804560B310E41E7FBA9B11A3225416891ED7C06310E415C8FC2B51A322541C520B07206310E417B14AEC72F322541A8C64B37DA300E41759318C43832254196438B6CCB300E41F0A7C60B2D3225417593180497300E417D3F355ECA312541FA7E6ABCDD2E0E41''' in sql
     os.remove(dstfile)
     gdal.SetConfigOption('OGR_STROKE_CURVE', option)
 
@@ -112,7 +132,7 @@ def test_ili_schema_to_postgis():
     transferfn = imd.gen_empty_transfer_file()
     trans = OgrConfig(
         config="tests/data/np/NP_73_CH_de_ili2-pg.cfg",
-        ds=transferfn+",tests/data/np/NP_73_CH_de_ili2.imd")
+        ds=transferfn + ",tests/data/np/NP_73_CH_de_ili2.imd")
     __, dstfile = tempfile.mkstemp(suffix='.sql')
     trans.transform(dstfile, "PGDump")
     print(dstfile)
@@ -124,7 +144,7 @@ def test_ili_schema_to_postgis():
 
 
 def manualtest_ili_with_struct_to_gml():
-    #ogr genconfig --format GML tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf,tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd --model tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd --srs=EPSG:21781 >tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118-gml.cfg
+    # ogr genconfig --format GML tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf,tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd --model tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd --srs=EPSG:21781 >tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118-gml.cfg
     trans = OgrConfig(
         config="tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.cfg",
         ds="tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.xtf,tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.imd")
@@ -137,7 +157,7 @@ def manualtest_ili_with_struct_to_gml():
 
 
 def test_encoding():
-    #ogr genconfig --format GML tests/data/np/NP_Example.xtf,tests/data/np/NP_73_CH_de_ili2.imd --model tests/data/np/NP_73_CH_de_ili2.imd --srs=EPSG:21781 >tests/data/np/NP_73_CH_de_ili2.cfg
+    # ogr genconfig --format GML tests/data/np/NP_Example.xtf,tests/data/np/NP_73_CH_de_ili2.imd --model tests/data/np/NP_73_CH_de_ili2.imd --srs=EPSG:21781 >tests/data/np/NP_73_CH_de_ili2.cfg
     trans = OgrConfig(
         config="tests/data/np/NP_73_CH_de_ili2.cfg",
         ds="tests/data/np/NP_Example.xtf,tests/data/np/NP_73_CH_de_ili2.imd")
@@ -151,7 +171,7 @@ def test_encoding():
 
     trans = OgrConfig(config="tests/data/np/NP_73_CH_de_ili2.cfg",
                       ds="tests/data/np/NP_Example_latin1.xtf,tests/data/np/NP_73_CH_de_ili2.imd")
-    #NP_Example_latin1.xtf has latin1 header and contains entities like &#xfc; as ü
+    # NP_Example_latin1.xtf has latin1 header and contains entities like &#xfc; as ü
     __, dstfile = tempfile.mkstemp(suffix='.gml')
     os.remove(dstfile)
     trans.transform(dstfile, "GML")

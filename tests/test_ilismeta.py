@@ -12,7 +12,7 @@ def test_extract_enums_gml():
     parser = ImdParser("./tests/data/ili/Beispiel.imd")
     gml = parser.extract_enums_asgml()
     print(gml)
-    assert b"gml:featureMember><gml:featureMember><enum3_Art><id>1</id><enum>befestigt</enum><enumtxt>befestigt</enumtxt></enum3_Art>" in gml
+    assert b"_Art><id>1</id><enum>befestigt</enum><enumtxt>befestigt</enumtxt></enum" in gml
 
 
 def test_extract_extended_enums():
