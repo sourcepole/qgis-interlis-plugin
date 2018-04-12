@@ -1,52 +1,53 @@
 from ogrtools.ogrtransform.ogrconfig import OgrConfig
 from ogrtools.interlis.ilismeta import prettify
+import json
 
 
 def test_shape_config():
     cfg = OgrConfig(ds="tests/data/osm/railway.shp")
     cfgjson = cfg.generate_config(dst_format='PostgreSQL')
     expected = """{
+  "//": "OGR transformation configuration",
+  "src_format": "ESRI Shapefile",
+  "dst_format": "PostgreSQL",
+  "dst_dsco": {},
   "dst_lco": {
     "SCHEMA": "public"
   },
-  "dst_dsco": {},
-  "dst_format": "PostgreSQL",
-  "//": "OGR transformation configuration",
   "layers": {
     "railway": {
-      "geometry_type": "LineString",
       "src_layer": "railway",
       "fields": {
-        "name": {
-          "src": "name",
-          "width": 255,
-          "type": "String"
-        },
-        "lastchange": {
-          "src": "lastchange",
-          "width": 10,
-          "type": "Date"
+        "type": {
+          "src": "type",
+          "type": "String",
+          "width": 255
         },
         "osm_id": {
           "src": "osm_id",
-          "width": 11,
-          "type": "Integer64"
+          "type": "Integer64",
+          "width": 11
         },
-        "type": {
-          "src": "type",
-          "width": 255,
-          "type": "String"
+        "lastchange": {
+          "src": "lastchange",
+          "type": "Date",
+          "width": 10
+        },
+        "name": {
+          "src": "name",
+          "type": "String",
+          "width": 255
         },
         "keyvalue": {
           "src": "keyvalue",
-          "width": 80,
-          "type": "String"
+          "type": "String",
+          "width": 80
         }
       },
-      "geom_fields": {}
+      "geom_fields": {},
+      "geometry_type": "LineString"
     }
-  },
-  "src_format": "ESRI Shapefile"
+  }
 }"""
 
     print(cfgjson)
@@ -58,17 +59,23 @@ def test_ili_config():
         ds="./tests/data/ili/roads23.xtf,./tests/data/ili/RoadsExdm2ien.imd")
     cfgjson = cfg.generate_config(dst_format='PostgreSQL', srs=21781)
 
-    expected_layer = '''"src_layer": "RoadsExdm2ien.RoadsExtended.StreetAxis"'''
-    expected_type = '''"geometry_type": "MultiLineString"'''
-    expected_field = '''"precision": {'''
-    expected_field_src = '''"src": "Precision"'''
+    expected = {
+        'src_layer': 'RoadsExdm2ien.RoadsExtended.StreetAxis',
+        'geom_fields': {'geometry': {'src': 'Geometry',
+                                     'type': 'MultiLineString',
+                                     'srs': 21781}},
+        'fields': {'precision': {'src': 'Precision',
+                                 'type': 'String'},
+                   'tid': {'src': 'TID',
+                           'type': 'String'},
+                   'street': {'src': 'Street',
+                              'type': 'String'}},
+        'geometry_type': 'MultiLineString'
+    }
 
     print(cfgjson)
 
-    assert expected_layer in cfgjson
-    assert expected_type in cfgjson
-    assert expected_field in cfgjson
-    assert expected_field_src in cfgjson
+    assert json.loads(cfgjson)["layers"]["roadsexdm2ien_roadsextended_streetaxis"] == expected
 
 
 def test_np():
@@ -76,17 +83,28 @@ def test_np():
                     model="tests/data/np/NP_73_CH_de_ili2.imd")
     cfgjson = cfg.generate_config(dst_format='PostgreSQL')
 
-    expected_layer = '''"src_layer": "Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonenflaeche"'''
-    expected_type = '''"geometry_type": "Polygon"'''
-    expected_field = '''"mutation": {'''
-    expected_field_src = '''"src": "Mutation"'''
+    expected = {
+        'src_layer': 'Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonenflaeche',
+        'fields': {'herkunft': {'src': 'Herkunft',
+                                'type': 'String'},
+                   'zonentyp_1': {'src': 'Zonentyp_1',
+                                  'type': 'String'},
+                   'tid': {'src': 'TID',
+                           'type': 'String'},
+                   'bemerkungen': {'src': 'Bemerkungen',
+                                   'type': 'String'},
+                   'mutation': {'src': 'Mutation',
+                                'type': 'String'},
+                   'qualitaet': {'src': 'Qualitaet',
+                                 'type': 'String'}},
+        'geom_fields': {'geometrie': {'src': 'Geometrie',
+                                      'type': 'Polygon'}},
+        'geometry_type': 'Polygon'
+    }
 
     print(cfgjson)
 
-    assert expected_layer in cfgjson
-    assert expected_type in cfgjson
-    assert expected_field in cfgjson
-    assert expected_field_src in cfgjson
+    assert json.loads(cfgjson)["layers"]["n0_grundnutzung_zonenflaeche'"] == expected
 
 
 def test_layer_info():
@@ -118,14 +136,16 @@ def test_enums():
                     model="./tests/data/ili/RoadsExdm2ien.imd")
     cfgjson = cfg.generate_config(dst_format='PostgreSQL')
 
-    expected_name = '''"src_name": "RoadsExdm2ben.Roads.LAttrs.LArt"'''
-    expected_enum = ['''"enumtxt": "fuzzy"''', '''"enum": "welldefined"''']
+    expected = {
+        'values': [{'id': 0,
+                    'enumtxt': 'welldefined',
+                    'enum': 'welldefined'},
+                   {'id': 1, 'enumtxt': 'fuzzy',
+                    'enum': 'fuzzy'}],
+        'src_name': 'RoadsExdm2ben.Roads.LAttrs.LArt'
+    }
 
-    print(cfgjson)
-
-    assert expected_name in cfgjson
-    for enum in expected_enum:
-        assert enum in cfgjson
+    assert expected in json.loads(cfgjson)["enums"].values()
 
 
 def test_vrt():
@@ -133,15 +153,13 @@ def test_vrt():
                     config="./tests/data/ili/RoadsExdm2ien.cfg")
     vrt = prettify(cfg.generate_vrt())
 
-    expected_layer = '''<SrcLayer>RoadsExdm2ien.RoadsExtended.RoadSign</SrcLayer>'''
-    expected_geom = '''<GeometryType>wkbPoint</GeometryType>'''
     expected_fields = ['''<Field name="type" src="Type" type="String"/>''',
                        '''<Field name="tid" src="TID" type="String"/>''']
 
     print(vrt)
 
-    assert expected_layer in vrt
-    assert expected_geom in vrt
+    assert '''<SrcLayer>RoadsExdm2ien.RoadsExtended.RoadSign</SrcLayer>''' in vrt
+    assert '''<GeometryType>wkbPoint</GeometryType>''' in vrt
     for field in expected_fields:
         assert field in vrt
 
@@ -151,15 +169,13 @@ def test_reverse_vrt():
                     config="./tests/data/ili/RoadsExdm2ien.cfg")
     vrt = prettify(cfg.generate_reverse_vrt())
 
-    expected_layer = '''<SrcLayer>roadsign</SrcLayer>'''
-    expected_geom = '''<GeometryType>wkbPoint</GeometryType>'''
     expected_fields = ['''<Field name="Type" src="type"/>''',
                        '''<Field name="TID" src="tid"/>''']
 
     print(vrt)
 
-    assert expected_layer in vrt
-    assert expected_geom in vrt
+    assert '''<SrcLayer>roadsign</SrcLayer>''' in vrt
+    assert '''<GeometryType>wkbPoint</GeometryType>''' in vrt
     for field in expected_fields:
         assert field in vrt
 
@@ -169,18 +185,30 @@ def test_multigeom_vrt():
                     config="./tests/data/ch.bazl/ch.bazl.sicherheitszonenplan.oereb_20131118.cfg")
     vrt = prettify(cfg.generate_vrt())
 
-    expected_name = '''<OGRVRTLayer name="oerebkrm09trsfr_transferstruktur_geometrie">'''
-    expected_layer = '''<SrcLayer>OeREBKRM09trsfr.Transferstruktur.Geometrie</SrcLayer>'''
     expected_fields = ['''<Field name="zustaendigestelle" src="ZustaendigeStelle" type="String"/>''',
                        '''<Field name="eigentumsbeschraenkung" src="Eigentumsbeschraenkung" type="String"/>''',
                        '''<Field name="rechtsstatus" src="Rechtsstatus" type="String"/>''',
                        '''<Field name="tid" src="TID" type="String"/>''',
                        '''<Field name="publiziertab" src="publiziertAb" type="String"/>''',
                        '''<Field name="metadatengeobasisdaten" src="MetadatenGeobasisdaten" type="String"/>''']
+    expected_geom_fields = ['''<GeometryField field="Linie" name="linie">''',
+                            '''<GeometryType>wkbMultiLineString</GeometryType>''',
+                            '''<SRS>EPSG:21781</SRS>''',
+                            '''</GeometryField>''',
+                            '''<GeometryField field="Punkt" name="punkt">''',
+                            '''<GeometryType>wkbPoint</GeometryType>''',
+                            '''<SRS>EPSG:21781</SRS>''',
+                            '''</GeometryField>''',
+                            '''<GeometryField field="Flaeche" name="flaeche">''',
+                            '''<GeometryType>wkbPolygon</GeometryType>''',
+                            '''<SRS>EPSG:21781</SRS>''',
+                            '''</GeometryField>''']
 
     print(vrt)
 
-    assert expected_name in vrt
-    assert expected_layer in vrt
+    assert '''<OGRVRTLayer name="oerebkrm09trsfr_transferstruktur_geometrie">''' in vrt
+    assert '''<SrcLayer>OeREBKRM09trsfr.Transferstruktur.Geometrie</SrcLayer>''' in vrt
     for field in expected_fields:
+        assert field in vrt
+    for field in expected_geom_fields:
         assert field in vrt

@@ -212,6 +212,7 @@ Running tests:
 ::
 
     python3 -m "nose"
+    The tests were made for GDAL version 2.2.2
 
 For running ogr commands from source tree:
 

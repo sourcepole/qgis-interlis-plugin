@@ -31,10 +31,7 @@ def test_shape_to_geojson():
     assert geojsonstart in result
     expected = {'geometry': {'type': 'LineString', 'coordinates': [[9.607321, 47.243618], [9.606866, 47.24333], [9.606458, 47.24304], [9.605599, 47.24239], [9.604964, 47.241844], [9.604479, 47.241367], [9.604155, 47.241047], [9.603565, 47.240444], [9.603248, 47.24009], [9.603007, 47.23979], [9.602733, 47.23939]]}, 'properties': {'keyvalue': '"usage"=>"main", "railway"=>"rail", "service"=>"siding", "operator"=>"Ã\x96BB", "el', 'changed_at': '2009/08/15', 'osm_type': 'rail', 'osm_id': 9440158.0}, 'type': 'Feature'}
 
-    # keep going for every key foudn in the first feature
-    for key in json.loads(result)['features'][0].keys():
-        # check if the key/value pair in the json file are as expected
-        assert json.loads(result)['features'][0][key] == expected[key]
+    assert json.loads(result)['features'][0] == expected
     os.remove(dstfile)
 
 
