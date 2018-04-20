@@ -18,7 +18,17 @@ def test_ogr_transform():
       <ogr:type>prohibition.noparking</ogr:type>
     </ogr:roadsign>
   </gml:featureMember>"""
-    assert expected in gml
+    expected_2 = """<gml:featureMember>
+    <ogr:roadsign fid="roadsign.0">
+      <ogr:position><gml:Point srsName="EPSG:21781"><gml:coordinates>69.389,92.056</gml:coordinates></gml:Point></ogr:position>
+      <ogr:type>prohibition.noparking</ogr:type>
+      <ogr:tid>501</ogr:tid>
+    </ogr:roadsign>
+  </gml:featureMember>"""
+    try:
+        assert expected in gml
+    except:
+        assert expected_2 in gml
     os.remove(dstfile)
 
 
