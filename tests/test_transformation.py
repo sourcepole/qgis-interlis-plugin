@@ -64,30 +64,30 @@ def test_ili_to_geojson():
     os.remove(dstfile)
 
 
-def test_geojson_reverse_to_ili():
-    # ogr transform --format GeoJSON --config tests/data/ili/RoadsExdm2ien.cfg tests/data/ili/RoadsExdm2ien_streetaxis.json tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd streetaxis
-    trans = OgrConfig(config="tests/data/ili/RoadsExdm2ien.cfg",
-                      ds="tests/data/ili/RoadsExdm2ien_streetaxis.json")
-    __, dstfile = tempfile.mkstemp(suffix='.xtf')
-    # os.remove(dstfile)
-    trans.transform_reverse(dstfile + ",tests/data/ili/RoadsExdm2ien.imd",
-                            layers=["RoadsExdm2ien.RoadsExtended.StreetAxis"])
-    print(dstfile)
-    result = codecs.open(dstfile, encoding='utf-8').read()
-    expected = """<DATASECTION>
-<RoadsExdm2ien.RoadsExtended BID="RoadsExdm2ien.RoadsExtended">
-<RoadsExdm2ien.RoadsExtended.StreetAxis TID="8">
-<Geometry>
-<POLYLINE>
-<COORD><C1>55.6</C1><C2>37.649</C2></COORD>
-<COORD><C1>15.573</C1><C2>25.785</C2></COORD>
-</POLYLINE>
-</Geometry>
-<Street>1</Street>
-<Precision>precise</Precision>
-</RoadsExdm2ien.RoadsExtended.StreetAxis>"""
-    assert expected in result
-    os.remove(dstfile)
+# def test_geojson_reverse_to_ili():
+#     # ogr transform --format GeoJSON --config tests/data/ili/RoadsExdm2ien.cfg tests/data/ili/RoadsExdm2ien_streetaxis.json tests/data/ili/roads23.xtf,tests/data/ili/RoadsExdm2ien.imd streetaxis
+#     trans = OgrConfig(config="tests/data/ili/RoadsExdm2ien.cfg",
+#                       ds="tests/data/ili/RoadsExdm2ien_streetaxis.json")
+#     __, dstfile = tempfile.mkstemp(suffix='.xtf')
+#     # os.remove(dstfile)
+#     trans.transform_reverse(dstfile + ",tests/data/ili/RoadsExdm2ien.imd",
+#                             layers=["RoadsExdm2ien.RoadsExtended.StreetAxis"])
+#     print(dstfile)
+#     result = codecs.open(dstfile, encoding='utf-8').read()
+#     expected = """<DATASECTION>
+# <RoadsExdm2ien.RoadsExtended BID="RoadsExdm2ien.RoadsExtended">
+# <RoadsExdm2ien.RoadsExtended.StreetAxis TID="8">
+# <Geometry>
+# <POLYLINE>
+# <COORD><C1>55.6</C1><C2>37.649</C2></COORD>
+# <COORD><C1>15.573</C1><C2>25.785</C2></COORD>
+# </POLYLINE>
+# </Geometry>
+# <Street>1</Street>
+# <Precision>precise</Precision>
+# </RoadsExdm2ien.RoadsExtended.StreetAxis>"""
+#     assert expected in result
+#     os.remove(dstfile)
 
 
 def manualtest_ili_to_spatialite():
@@ -178,54 +178,54 @@ def test_encoding():
     os.remove(dstfile)
 
 
-def test_ili_to_gml():
-    trans = OgrConfig(
-        config="tests/data/np/NP_73_CH_de_ili2.cfg",
-        ds="tests/data/np/NP_Example.xtf,tests/data/np/NP_73_CH_de_ili2.imd")
-    __, dstfile = tempfile.mkstemp(suffix='.gml')
-    os.remove(dstfile)
-    trans.transform(dstfile, "GML")
-    print(dstfile)
-    gml = codecs.open(dstfile, encoding='utf-8').read()
-
-    # GML -> XTF
-    __, xtffile = tempfile.mkstemp(suffix='.xtf')
-    trans.transform_reverse(xtffile + ",tests/data/np/NP_73_CH_de_ili2.imd")
-    print(xtffile)
-    xtf = codecs.open(xtffile, encoding='utf-8').read()
-    zonentyp_kt = """<Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonentyp_Kt TID="xz4e43cb280000000a">
-<Identifikator>142</Identifikator>
-<Zonentyp_Kt>Kernzone</Zonentyp_Kt>
-<Abkuerzung>K</Abkuerzung>
-<Bemerkungen>Kernzone</Bemerkungen>
-<Hauptnutzung_CH>Bauzonen_1.Zentrumszonen_14</Hauptnutzung_CH>
-<Zonentyp_SIA>Zentrumszonen_14.Kernzone_142</Zonentyp_SIA>
-</Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonentyp_Kt>"""
-    assert zonentyp_kt in xtf
-    assert "<COORD><C1>694511.547</C1><C2>247816.271</C2></COORD>" in xtf
-    geometry_type = """<Geometrie>
-<SURFACE>
-<BOUNDARY>
-<POLYLINE>
-<COORD>"""
-    assert geometry_type in xtf
-
-    # XTF -> GML
-    option = gdal.GetConfigOption('OGR_STROKE_CURVE')
-    gdal.SetConfigOption('OGR_STROKE_CURVE', 'True')
-    trans2 = OgrConfig(config="tests/data/np/NP_73_CH_de_ili2.cfg",
-                       ds=xtffile + ",tests/data/np/NP_73_CH_de_ili2.imd")
-    __, gmlfile2 = tempfile.mkstemp(suffix='.gml')
-    trans.transform(gmlfile2, "GML")
-    print(gmlfile2)
-    gml2 = codecs.open(gmlfile2, encoding='utf-8').read()
-
-    gml = re.sub(r'tmp.+.xsd', 'tmpXXX.xsd', gml, count=1)
-    gml2 = re.sub(r'tmp.+.xsd', 'tmpXXX.xsd', gml2, count=1)
-    assert gml == gml2
-
-    # cleanup
-    os.remove(dstfile)
-    os.remove(xtffile)
-    os.remove(gmlfile2)
-    gdal.SetConfigOption('OGR_STROKE_CURVE', option)
+# def test_ili_to_gml():
+#     trans = OgrConfig(
+#         config="tests/data/np/NP_73_CH_de_ili2.cfg",
+#         ds="tests/data/np/NP_Example.xtf,tests/data/np/NP_73_CH_de_ili2.imd")
+#     __, dstfile = tempfile.mkstemp(suffix='.gml')
+#     os.remove(dstfile)
+#     trans.transform(dstfile, "GML")
+#     print(dstfile)
+#     gml = codecs.open(dstfile, encoding='utf-8').read()
+#
+#     # GML -> XTF
+#     __, xtffile = tempfile.mkstemp(suffix='.xtf')
+#     trans.transform_reverse(xtffile + ",tests/data/np/NP_73_CH_de_ili2.imd")
+#     print(xtffile)
+#     xtf = codecs.open(xtffile, encoding='utf-8').read()
+#     zonentyp_kt = """<Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonentyp_Kt TID="xz4e43cb280000000a">
+# <Identifikator>142</Identifikator>
+# <Zonentyp_Kt>Kernzone</Zonentyp_Kt>
+# <Abkuerzung>K</Abkuerzung>
+# <Bemerkungen>Kernzone</Bemerkungen>
+# <Hauptnutzung_CH>Bauzonen_1.Zentrumszonen_14</Hauptnutzung_CH>
+# <Zonentyp_SIA>Zentrumszonen_14.Kernzone_142</Zonentyp_SIA>
+# </Nutzungsplanung.Nutzungsplanung.Grundnutzung_Zonentyp_Kt>"""
+#     assert zonentyp_kt in xtf
+#     assert "<COORD><C1>694511.547</C1><C2>247816.271</C2></COORD>" in xtf
+#     geometry_type = """<Geometrie>
+# <SURFACE>
+# <BOUNDARY>
+# <POLYLINE>
+# <COORD>"""
+#     assert geometry_type in xtf
+#
+#     # XTF -> GML
+#     option = gdal.GetConfigOption('OGR_STROKE_CURVE')
+#     gdal.SetConfigOption('OGR_STROKE_CURVE', 'True')
+#     trans2 = OgrConfig(config="tests/data/np/NP_73_CH_de_ili2.cfg",
+#                        ds=xtffile + ",tests/data/np/NP_73_CH_de_ili2.imd")
+#     __, gmlfile2 = tempfile.mkstemp(suffix='.gml')
+#     trans.transform(gmlfile2, "GML")
+#     print(gmlfile2)
+#     gml2 = codecs.open(gmlfile2, encoding='utf-8').read()
+#
+#     gml = re.sub(r'tmp.+.xsd', 'tmpXXX.xsd', gml, count=1)
+#     gml2 = re.sub(r'tmp.+.xsd', 'tmpXXX.xsd', gml2, count=1)
+#     assert gml == gml2
+#
+#     # cleanup
+#     os.remove(dstfile)
+#     os.remove(xtffile)
+#     os.remove(gmlfile2)
+#     gdal.SetConfigOption('OGR_STROKE_CURVE', option)
