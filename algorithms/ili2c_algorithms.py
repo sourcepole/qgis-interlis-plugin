@@ -29,10 +29,11 @@ __copyright__ = '(C) 2016 by Pirmin Kalberer'
 
 __revision__ = '$Format:%H$'
 
+from qgis.PyQt.QtCore import QCoreApplication
+
 from qgis.core import (QgsProcessingAlgorithm,
                        QgsProcessingParameterFile,
                        QgsProcessingParameterFileDestination,
-                       QCoreApplication
                        )
 
 from .interlis_utils import IliUtils
