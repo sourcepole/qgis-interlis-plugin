@@ -106,5 +106,13 @@ class InterlisProvider(QgsProcessingProvider):
         even if the list does not change, since the self.algs list is
         cleared before calling this method.
         """
+
+        self.alglist = [
+            Ili2PgSchemaAlgorithm(), Ili2PgImportAlgorithm(),
+            Ili2PgExportAlgorithm(), Ili2GpkgSchemaAlgorithm(),
+            Ili2GpkgImportAlgorithm(), Ili2GpkgExportAlgorithm(),
+            Ili2ImdAlgorithm()
+            ]
+            
         for alg in self.alglist:
             self.addAlgorithm(alg)
