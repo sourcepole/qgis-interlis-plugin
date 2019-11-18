@@ -1,15 +1,18 @@
 [general]
 name=interlis
 qgisMinimumVersion=3.0
-# 2.14 is technically not required, but the first version on Windows with OGR 2.0
 description=Interlis Import/Export
 about=Load Interlis data into QGIS layer and import/export functionality for PostGIS.
   Contains a GUI and Processing algorithms for additional tasks requiring a Java.
-version=0.14.6
+version=0.14.7
 author=Pirmin Kalberer (Sourcepole)
 email=pka@sourcepole.ch
 
 changelog=
+  0.14.7
+    - Fix srsCode extraction in GPKG schemaimport
+    - Create GPKG in Create Schema command
+    - Set default Crs parameter to EPSG:2056
   0.14.6
     - iliprovider bug fixed
   0.14.5
