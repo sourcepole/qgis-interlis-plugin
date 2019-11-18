@@ -189,11 +189,9 @@ class Ili2GpkgSchemaAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterCrs(
             'defaultSrsCode', self.tr('Default SRS code (EPSG)'),
             defaultValue=21781))
-        self.addParameter(QgsProcessingParameterFile(
+        self.addParameter(QgsProcessingParameterFileDestination(
             self.DB,
-            self.tr('GPKG database file'),
-            behavior=QgsProcessingParameterFile.File, optional=False,
-            extension='gpkg'))
+            self.tr('GPKG database file')))
 
     def processAlgorithm(self, parameters, context, feedback):
         ili2dbargs = ['--schemaimport']
