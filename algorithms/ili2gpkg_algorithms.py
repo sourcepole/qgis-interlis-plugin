@@ -188,7 +188,7 @@ class Ili2GpkgSchemaAlgorithm(QgsProcessingAlgorithm):
             defaultValue=True))
         self.addParameter(QgsProcessingParameterCrs(
             'defaultSrsCode', self.tr('Default SRS code (EPSG)'),
-            defaultValue=21781))
+            defaultValue='EPSG:2056'))
         self.addParameter(QgsProcessingParameterFileDestination(
             self.DB,
             self.tr('GPKG database file')))

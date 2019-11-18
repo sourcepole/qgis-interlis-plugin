@@ -253,7 +253,7 @@ class Ili2PgSchemaAlgorithm(QgsProcessingAlgorithm):
             defaultValue=True))
         self.addParameter(QgsProcessingParameterCrs(
             'defaultSrsCode', self.tr('Default SRS code (EPSG)'),
-            defaultValue=21781))
+            defaultValue='EPSG:2056'))
         self.db_connections = dbConnectionNames()
         self.addParameter(QgsProcessingParameterEnum(
             self.DB, self.tr('Database (connection name)'),
