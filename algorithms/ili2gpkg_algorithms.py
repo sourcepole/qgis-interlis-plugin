@@ -234,7 +234,7 @@ class Ili2GpkgSchemaAlgorithm(QgsProcessingAlgorithm):
         if parameters.get('createEnumTabs'):
             ili2dbargs.append('--createEnumTabs')
 
-        defaultSrsCode = parameters.get('defaultSrsCode').split(":")[1]
+        defaultSrsCode = parameters.get('defaultSrsCode').authid().split(":")[1]
         ili2dbargs.extend(["--defaultSrsCode", defaultSrsCode])
 
         db = parameters.get(self.DB)
