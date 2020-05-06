@@ -21,7 +21,7 @@
 """
 
 from qgis.PyQt.QtCore import (pyqtSlot, Qt, QSettings, QEventLoop, QTimer,
-                              qDebug, QUrl)
+                              qDebug, QUrl, QByteArray)
 from qgis.PyQt.QtWidgets import QFileDialog, QDialog, QDockWidget
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import (QgsApplication, QgsDataSourceUri,
@@ -205,18 +205,15 @@ class InterlisDialog(QDialog):
             url = self.ui.mIlisMetaUrlLineEdit.text()
             req = QNetworkRequest(QUrl(url))
             req.setHeader(QNetworkRequest.ContentTypeHeader, 'application/xml')
-            reply = QgsNetworkAccessManager.instance().post(req, wpsreq)
+            data = QByteArray()
+            data.append(wpsreq)
+            reply = QgsNetworkAccessManager.instance().blockingPost(
+                req, data)
 
-            # Wait for reply or timeout
-            loop = QEventLoop()
-            reply.finished.connect(loop.quit)
-            QTimer.singleShot(15000, reply.abort)
-            loop.exec_()
-
-            if reply.isFinished() and reply.error() == QNetworkReply.NoError:
-                result = reply.readAll()
+            if reply.error() == QNetworkReply.NoError:
+                result = reply.content()
                 imd = self._parse_wps_response(result)
-        except:
+        except Exception as e:
             qDebug("Exception during IlisModel download")
         if imd is None:
             self._show_log_window()

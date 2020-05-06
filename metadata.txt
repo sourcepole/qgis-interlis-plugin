@@ -1,14 +1,16 @@
 [general]
 name=interlis
-qgisMinimumVersion=3.0
+qgisMinimumVersion=3.6
 description=Interlis Import/Export
 about=Load Interlis data into QGIS layer and import/export functionality for PostGIS.
   Contains a GUI and Processing algorithms for additional tasks requiring a Java.
-version=0.14.7
+version=0.14.8
 author=Pirmin Kalberer (Sourcepole)
 email=pka@sourcepole.ch
 
 changelog=
+  0.14.8
+    - Fix model network request for newer QGIS versions
   0.14.7
     - Fix srsCode extraction in GPKG schemaimport
     - Create GPKG in Create Schema command
