@@ -31,6 +31,7 @@ __revision__ = '$Format:%H$'
 from qgis.PyQt.QtCore import QSettings, QCoreApplication
 from qgis.core import (QgsProcessingAlgorithm,
                        QgsProcessingException,
+                       QgsProcessingOutputFile,
                        QgsProcessingParameterCrs,
                        QgsProcessingParameterFile,
                        QgsProcessingParameterFileDestination,
@@ -465,6 +466,9 @@ class Ili2PgExportAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterFileDestination(
             self.XTF, description="Interlis transfer output file"))
         # ext: xtf, xml, itf
+        self.addOutput(QgsProcessingOutputFile(
+            self.OUTPUT,
+            self.tr('Interlis transfer file')))
 
     def processAlgorithm(self, parameters, context, feedback):
         ili2dbargs = ['--export']
@@ -493,4 +497,4 @@ class Ili2PgExportAlgorithm(QgsProcessingAlgorithm):
             ProcessingConfig.getSetting(IliUtils.ILI2PG_JAR),
             ili2dbargs)
 
-        return {}
+        return { self.OUTPUT: xtf }
