@@ -463,7 +463,8 @@ class Ili2PgExportAlgorithm(QgsProcessingAlgorithm):
             self.ILIMODELS,
             self.tr('Interlis models')))
         self.addParameter(QgsProcessingParameterFileDestination(
-            self.XTF, description="Interlis transfer output file"))
+            self.OUTPUT,
+            self.tr('Interlis transfer output file')))
         # ext: xtf, xml, itf
 
     def processAlgorithm(self, parameters, context, feedback):
@@ -486,11 +487,11 @@ class Ili2PgExportAlgorithm(QgsProcessingAlgorithm):
         if models:
             ili2dbargs.extend(["--models", models])
 
-        xtf = parameters.get(self.XTF)
+        xtf = parameters.get(self.OUTPUT)
         ili2dbargs.append(xtf)
 
         IliUtils.runJava(
             ProcessingConfig.getSetting(IliUtils.ILI2PG_JAR),
             ili2dbargs)
 
-        return {}
+        return { self.OUTPUT: xtf }
